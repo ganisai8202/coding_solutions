@@ -1,0 +1,219 @@
+This is pdfTeX, Version 3.14159265-2.6-1.40.18 (TeX Live 2017/Debian) (preloaded format=pdftex 2020.2.28)  29 AUG 2021 07:44
+entering extended mode
+ restricted \write18 enabled.
+ %&-line parsing enabled.
+**article.tex
+(./article.tex
+! Undefined control sequence.
+l.4 \documentclass
+                  {noithesis}
+? 
+! Interruption.
+<to be read again> 
+                   {
+l.4 \documentclass{
+                   noithesis}
+? 
+! Undefined control sequence.
+l.5 \usepackage
+               {tikz-cd}
+? 
+! Undefined control sequence.
+l.6 \usepackage
+               {paralist}
+? 
+! Undefined control sequence.
+l.7 \usepackage
+               {mathtools}
+? 
+! Undefined control sequence.
+l.8 \usepackage
+               {mathrsfs}
+? 
+! Undefined control sequence.
+l.9 \usepackage
+               {hyperref}
+? 
+! Undefined control sequence.
+l.10 \usepackage
+                {tikz}
+? 
+! Undefined control sequence.
+l.11 \usepackage
+                {tikz-qtree}
+? 
+! Undefined control sequence.
+l.12 \usetikzlibrary
+                    {arrows,shapes,graphs}
+? 
+! Undefined control sequence.
+l.13 \pgfdeclarelayer
+                     {background}
+? 
+! Undefined control sequence.
+l.14 \pgfdeclarelayer
+                     {foreground}
+? 
+! Undefined control sequence.
+l.15 \pgfsetlayers
+                  {background,main,foreground}
+? 
+! Undefined control sequence.
+l.17 \renewcommand
+                  {\em}{\sffamily\CJKfamily{kai}} %\sffamily\CJKfamily{emfont}
+? 
+! Undefined control sequence.
+l.17 \renewcommand{\em
+                      }{\sffamily\CJKfamily{kai}} %\sffamily\CJKfamily{emfont}
+? 
+! Undefined control sequence.
+l.17 \renewcommand{\em}{\sffamily
+                                 \CJKfamily{kai}} %\sffamily\CJKfamily{emfont}
+? 
+! Undefined control sequence.
+l.17 \renewcommand{\em}{\sffamily\CJKfamily
+                                           {kai}} %\sffamily\CJKfamily{emfont}
+? 
+! Undefined control sequence.
+l.19 \begin
+           {document}
+? 
+! Undefined control sequence.
+l.23 \theoremstyle
+                  {plain}
+? 
+! Undefined control sequence.
+l.24 \newtheorem
+                {theorem}{\hspace{2em} theorem}[section]
+? 
+! Undefined control sequence.
+l.24 \newtheorem{theorem}{\hspace
+                                 {2em} theorem}[section]
+? 
+! Undefined control sequence.
+l.25 \newtheorem
+                {lemma}{\hspace{2em} lemma}[section]
+? 
+! Undefined control sequence.
+l.25 \newtheorem{lemma}{\hspace
+                               {2em} lemma}[section]
+? 
+! Undefined control sequence.
+l.27 \theoremstyle
+                  {definition}
+? 
+! Undefined control sequence.
+l.28 \newtheorem
+                {definition}{\hspace{2em}Definition}[section]
+? 
+! Undefined control sequence.
+l.28 \newtheorem{definition}{\hspace
+                                    {2em}Definition}[section]
+? 
+! Undefined control sequence.
+l.29 \newtheorem
+                {problem}{\hspace{2em}examples}
+? 
+! Undefined control sequence.
+l.29 \newtheorem{problem}{\hspace
+                                 {2em}examples}
+? 
+! Undefined control sequence.
+l.35 \title
+           {Theoretical framework of generating function calculation in info...
+
+? 
+! Undefined control sequence.
+l.36 \author
+            {High School Affiliated to Peking University~~Li Baitian}
+? 
+! Undefined control sequence.
+l.38 \maketitle
+               
+? 
+! I can't find file `{main}'.
+l.40 \input{main}
+                 
+(Press Enter to retry, or Control-D to exit)
+Please type another input file name: 
+! I can't find file `{main}'.
+l.40 \input{main}
+                 
+(Press Enter to retry, or Control-D to exit)
+Please type another input file name: 
+! I can't find file `{main}'.
+l.40 \input{main}
+                 
+(Press Enter to retry, or Control-D to exit)
+Please type another input file name: 
+! I can't find file `{main}'.
+l.40 \input{main}
+                 
+(Press Enter to retry, or Control-D to exit)
+Please type another input file name: 
+! I can't find file `{main}'.
+l.40 \input{main}
+                 
+(Press Enter to retry, or Control-D to exit)
+Please type another input file name: 
+! I can't find file `{main}'.
+l.40 \input{main}
+                 
+(Press Enter to retry, or Control-D to exit)
+Please type another input file name: 
+! I can't find file `{main}'.
+l.40 \input{main}
+                 
+(Press Enter to retry, or Control-D to exit)
+Please type another input file name: 
+! I can't find file `{main}'.
+l.40 \input{main}
+                 
+(Press Enter to retry, or Control-D to exit)
+Please type another input file name: 
+! I can't find file `{main}'.
+l.40 \input{main}
+                 
+(Press Enter to retry, or Control-D to exit)
+Please type another input file name: 
+! I can't find file `{main}'.
+l.40 \input{main}
+                 
+(Press Enter to retry, or Control-D to exit)
+Please type another input file name: 
+! I can't find file `{main}'.
+l.40 \input{main}
+                 
+(Press Enter to retry, or Control-D to exit)
+Please type another input file name: 
+! I can't find file `{main}'.
+l.40 \input{main}
+                 
+(Press Enter to retry, or Control-D to exit)
+Please type another input file name: 
+! I can't find file `{main}'.
+l.40 \input{main}
+                 
+(Press Enter to retry, or Control-D to exit)
+Please type another input file name: 
+! I can't find file `{main}'.
+l.40 \input{main}
+                 
+(Press Enter to retry, or Control-D to exit)
+Please type another input file name: 
+! I can't find file `{main}'.
+l.40 \input{main}
+                 
+(Press Enter to retry, or Control-D to exit)
+Please type another input file name: 
+! I can't find file `{main}'.
+l.40 \input{main}
+                 
+(Press Enter to retry, or Control-D to exit)
+Please type another input file name: 
+! Emergency stop.
+l.40 \input{main}
+                 
+End of file on the terminal!
+
+!  ==> Fatal error occurred, no output PDF file produced!

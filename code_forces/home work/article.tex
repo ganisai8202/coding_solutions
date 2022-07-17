@@ -1,0 +1,42 @@
+% !TEX encoding = UTF-8
+% !TEX program = xelatex
+
+\documentclass{noithesis}
+\usepackage{tikz-cd}
+\usepackage{paralist}
+\usepackage{mathtools}
+\usepackage{mathrsfs}
+\usepackage{hyperref}
+\usepackage{tikz}
+\usepackage{tikz-qtree}
+\usetikzlibrary{arrows,shapes,graphs}
+\pgfdeclarelayer{background}
+\pgfdeclarelayer{foreground}
+\pgfsetlayers{background,main,foreground}
+
+\renewcommand{\em}{\sffamily\CJKfamily{kai}} %\sffamily\CJKfamily{emfont}
+
+\begin{document}
+
+%% Paper began
+
+\theoremstyle{plain}
+\newtheorem{theorem}{\hspace{2em} theorem}[section]
+\newtheorem{lemma}{\hspace{2em} lemma}[section]
+
+\theoremstyle{definition}
+\newtheorem{definition}{\hspace{2em}Definition}[section]
+\newtheorem{problem}{\hspace{2em}examples}
+
+\ newenvironment{Solution}{{\ noindent The \ IT Solution\ Quad}}{\ hfill  $\ blacksquare $\ PAR}
+
+\newif\ifcont
+
+\title{Theoretical framework of generating function calculation in informatics competition}
+\author{High School Affiliated to Peking University~~Li Baitian}
+
+\maketitle
+
+\input{main}
+
+\end{document}

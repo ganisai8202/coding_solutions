@@ -1,0 +1,1460 @@
+\newcommand { \di }{ \ensuremath { \mathrm { \, d}}}
+\newcommand { \Mul }{ \ensuremath { \mathsf M}}
+\newcommand { \A }{ \ensuremath { \mathbb A}}
+\newcommand { \R }{ \ensuremath { \mathsf R}}
+\newcommand { \IZ }{ \ensuremath {{I \backslash  \{ 0 \} }}}
+\newcommand { \me }{ \mathrm {e}}
+
+\newcommand \DOI [1]{doi: \href {http://doi.org/#1}{ \texttt { #1 }}}
+\ newcommand \ARXIV [1]{arxiv: \href {https://arxiv.org/abs/#1}{ \texttt { #1 }}}
+
+\allowdisplaybreaks
+
+\makeatletter
+\newenvironment {breakablealgorithm}
+  { % \begin{breakablealgorithm}
+   \begin { center }
+     \refstepcounter {algorithm} % New algorithm
+     \hrule height.8pt depth0pt \kern 2pt % \@fs@pre for \@fs@ruled
+     \renewcommand { \caption }[2][ \relax ]{ % Make a new \caption
+       { \raggedright \textbf { \ALG@name ~ \thealgorithm } \sc ##2 \par } %
+       \ifx \relax ##1 \relax  % #1 is \relax
+         \addcontentsline {loa}{algorithm}{ \protect\numberline { \thealgorithm }##2} %
+       \else  % #1 is not \relax
+         \addcontentsline {loa}{algorithm}{ \protect\numberline { \thealgorithm }##1} %
+       \fi
+       \kern 2pt \hrule\kern 2pt
+     }
+  }{ % \end{breakablealgorithm}
+     \kern 2pt \hrule\relax % \@fs@post for \@fs@ruled
+   \end {center}
+  }
+\makeatother
+
+\begin { abstract }
+In recent years, generating functions have played an increasingly important role in the combinatorial counting problem of informatics competitions. The use of formula derivation in problem handling and knowledge in code implementation have gradually become popular. This article aims to give a method framework for generating functions to deal with problems in the actual combat of information science competitions, and to sort out some of the important algorithms.
+\end { abstract }
+
+\ifcont
+
+\tableofcontents
+
+\newpage
+
+\fi
+
+\section { Overview }
+
+When we get a generating function solution related to a combinatorial counting problem, there are still several barriers in the process of transforming its algebraic form into an algorithm for calculating the answer. The reason is that we are often restricted by the following complex objects when we perform calculations.
+
+\subsection { composite }
+
+Compared with convolution, we do not have a very efficient way to deal with general compound problems on formal power series problems. The most complex algorithm for polynomial modular compound problem has been introduced in OI is $ \Theta ((n \log n)^{3/2}) $ , and this algorithm has a large constant, which is often used in actual combat A "block FFT" algorithm with $ \Theta (n^ 2 ) $ operations has better performance. It is worth mentioning that this problem has an algorithm of $ O(n^{1+o(1)}) $ in the theoretical world (see \cite { polyfact }), but it is not clear whether it is superior in implementation.
+
+\subsection { Generate function equation }
+
+When self-referential in the description of the combined object, the generative function equation is naturally generated. The combination of various operations in the equation will make calculations more difficult. For example, the Cartesian product of the combined object derives the product of the generating function $ A(x) \times B(x) $ , the composite derivation of the structure generates the compound $ A(B(x)) $ of the generating function, the fixed derivation of the position in EGF Derivative of the generating function $ A'(x) $ , P \' olya Counting Theorem derives the subscript transformation $ A(x^k) $ and so on.
+
+\subsection { Evaluation of distant coefficients }
+
+The evaluation of distant coefficients means that when extracting the coefficients of the $ n $ th order, often the amount of calculation of $ \Omega (n) $ is not allowed. The requirements for the calculation to be completed in $ o(n) $ time are indeed more demanding, but there is still some room for discussion. At present, the two more mature types of remote coefficient evaluation are \emph { linear recurrence sequence } and \emph { integer recurrence sequence }.
+
+\begin { theorem } The $ 0 \sim k- 1 $ item of the given sequence $ a_n $ and the linear recurrence $ b_ 1 , \dots , b_k $ defined on it , satisfy
+$$ a_n = \sum _{j=1}^k a_{nj} b_j $$
+
+The existence algorithm calculates $ a_n $ in $ \Theta (k \log k \log n) $ time .
+\end { theorem }
+
+The more popular linear recursion algorithm was proposed by Fiduccia in 1985, and it does not have a good constant. The following article will introduce a linear recursive algorithm that is simpler in algorithm and has a better constant.
+
+\begin { theorem } The $ 0 \sim m- 1 $ item of the given sequence $ a_n $ and the integer recurrence $ P_ 0 , \dots , P_m $ defined on it , where $ P $ is no more than $ d $ degree polynomial, satisfying
+$$ a_n =- \frac 1 {P_0(n)} \sum _{j=1}^m a_{nj}P_j(n) $$
+
+Existence algorithm calculates $ a_n $ in $ \Theta  \left ( \sqrt {nd} \left (m^ 3 +m^ 2 \log (nd) \right ) \right ) $ time .
+\end { theorem }
+
+\subsection { Linear transformation }
+
+Among the linear transformations performed on the sequence, there is a very common type of transformation, and the transformation can be described by a polynomial representation method. The monomial coefficient expression and the descending power coefficient expression around the polynomial, the following equation
+$$
+f(x) = \sum _{n \le N} a_n x^n = \sum _{n \le N) b_n x(x- 1 ) \dots (x-n + 1 )
+$$
+In, the mutual transformation of sequence $ a $ and $ b $ currently has the barrier of complexity of $ O(n \log ^ 2 n) $ . However, under their respective representations, the two often have different advantages when performing other operations. Each has the complexity of $ \Theta (n \log n) $ or $ \Theta (n) $ in one type of problem. .
+
+In addition, when dealing with linear transformations, the transposition principle can help us simplify the problem.
+
+\ifcont
+\paragraph { $ { \textbf { transfer } \atop  \textbf { set }} $ principle }
+\else
+\paragraph { Principle of transposition }
+\fi
+\cite { tellegen } pointed out that when considering a type of calculation that can be expressed as a matrix multiplication $ \mathbf {Mx} $ on the input vector $ \mathbf x $ , consider the calculation of $ \mathbf M^{ \mathsf T} \mathbf y $ calculation design algorithm, and then transpose and rewrite each step of the algorithm.
+
+\section { Algorithm evaluation }
+
+\subsection { coefficient }
+
+In the combinatorial counting problem of informatics competition, because the problem often requires the output of the result of taking the modulus of a certain number, this calculation method often affects the use of the algorithm. Its influence on computational complexity can be roughly divided into the following four levels.
+
+\begin { center }
+\begin { tikzcd }[row sep=tiny, column sep=small]
+			\mathbb F_{ \mathsf {NTT}} \arrow [phantom, r, "\subset" description] & \mathbb F_p \arrow [phantom, r, "\subset" description] & \mathrm {GF}(p^k ) \arrow [phantom, r, "\subset" description] & \mathsf {Commutative \ Rings} \\
+			\text {NTT modulus field} & \text {prime number field} & \text {finite field} & \text {exchange ring}
+\end { tikzcd }
+\end { center }
+
+\begin { asparadesc }
+\item [NTT modulus field] Suppose that the prime number $ p $ of the modulus satisfies $ p = m \times  2 ^k + 1 $ . When $ k $ is large, due to the existence of the subunit root of $ 2 ^k $ , it is fast The number theory transformation can be performed within the time of $ \Theta (n \log n) $ to the power of $ 2 $ , and the longest is $ 2 ^k $ in the sense of number theory DFT results. Thus, for $ n \le  2 ^k $ , in $ \Theta (n \log n) $Complete the multiplication of two $ n $ degree polynomials within the time . Due to the existence of its DFT, the algorithm under this modulus often has a lot of room for targeted constant optimization based on the intermediate results of the DFT.
+
+\begin { itemize }
+\item  \emph { Module $ 998244353 $ }: The most famous NTT modulus is none other than $ \mathbb F_{998244353} $ . There is $ 998244353 = 119 \times  2 ^{23} + 1 $ .
+\end { itemize }
+
+\item [Prime number domain] It is also common to require the answer to be congruent with a prime number in the question. In most cases, $ p $ is very large (for example, $ 10 ^ 9 + 7 $ ), usually to ensure that the algorithm can be more free To divide.
+
+\ Item [finite field] For a $ \ mathbb F_p $ on $ n- $ order irreducible polynomial $ F $ , $ \ mathbb F_p [X] / F $ is a $ P ^ n- $ order finite field, referred to as a $ \mathrm {GF}(p^n) $ .
+
+\begin { itemize }
+\item  \emph { Nimber }: Nimber is a finite field that can be calculated more efficiently. It often appears as $ \mathrm {GF}( 2 ^{32}) $ or $ \mathrm {GF}( 2 ^{ 64}) $ , echoes with the computer's unsigned integer \texttt { uint32 } or \texttt { uint64 }.
+\ Item  \ emph { quadratic extension field }: the title of the more common secondary extension field, in fact, to the die $ P $ secondary nonresidue under $ R & lt $ , analog $ A + B \ sqrt R & lt $ of Operation. This is actually equivalent to $ \mathbb F_p[x]/(x^ 2 -r) $ . From the fact that $ r $ is quadratic non-residual, it can be seen that $ x^ 2 -r $ is an irreducible polynomial, so the former is area.
+\end { itemize }
+
+\item [Commutative ring] There is not necessarily an inverse in a commutative ring, so division is not always possible.
+
+\begin { itemize }
+\ Item  \ emph { mold $ n- $ arithmetic }: $ \ mathbb the Z / n- \ mathbb the Z $ in $ n- $ is the number of domains does not constitute engagement.
+\item  \emph { polynomial }: If the elements of a polynomial only constitute a commutative ring, or the modulus of a reducible polynomial during operation will cause the operation to not form a domain, but only a commutative ring.
+\end { itemize }
+
+\item [Miscellaneous] There are also some operations with extremely poor properties, which are not the focus of this article, but only briefly mentioned.
+
+\begin { itemize }
+\item  \emph { matrix ring }: Matrix multiplication is the most common non-commutative operation in informatics competitions. Due to its non-commutative nature, it is necessary to pay attention to the order of operations in calculations such as the inverse of the multiplication of the generating function, and operations such as the generating function $ \exp $ do not have good properties, and there is no algorithm with excellent complexity.
+\item  \emph { Maximum value and maximum value count }: The maximum value and the maximum value count only constitute a commutative half ring, because there is no $ O(n^{2- \epsilon }) $ algorithm for max-plus convolution at present , Due to the fact that its arithmetic properties are too far away from this article, it is only mentioned here.
+\end { itemize }
+
+\end { asparadesc }
+
+In the following description, the coefficient in our default calculation is at least a commutative ring, denoted as $ \A $ .
+
+\subsection { Sequence transformation }
+
+\subsubsection { Convolution }
+
+\begin { definition } [Convolutional Index System]
+We say that the set $ I $ satisfying the following properties and the operations $ \circ $ defined on it constitute the \emph { convolution subscript system } to be discussed below :
+\begin { itemize }
+\item  \emph { associative law }: That is, $ \forall i,j,k \in I $ , there is $ (i \circ j) \circ k = i \circ (j \circ k) $ .
+\item  \emph { commutative law }: For $ \forall i,j \in I $ , there is $ i \circ j = j \circ i $ .
+\item  \emph { identity element }: There is an element $ 1  \in I $ , for $ \forall i \in I $ , there is $ 1 \circ i = i $ .
+\item  \emph { zero element }: There is an element $ 0 \in I $ , for $ \forall i \in I $ , there is $ 0 \circ i = 0 $ .
+\item  \emph { Post-effect law }: For $ \forall i \in  \IZ $ , for any positive integer $ k $ and $ j_ 1 , \dots ,j_k \in I \backslash  \{ 0 , 1 \} $ There are $ i \circ j_ 1 \circ  \dots  \circ j_k \neq i $ .
+\end { itemize }
+In the following, if there is any ambiguity, use $ 0 _I, 1 _I $ to represent $ 0 , 1 $ . When discussing the convolution subscript system, the default is $ I $ to represent $ (I, \circ ) $ . When discussing algorithms, we default that $ I $ is limited.
+\end { definition }
+
+\begin { definition } [generating function]
+For the sequence $ \{ f_i \in \A\} _{i \in \IZ } $ with the convolution index system $ I $ as the subscript , we define its generating function $ F(X) = \sum _{i \in I} f_i X^i $ , we denote $ X $ as "undetermined yuan", which satisfies:  
+
+\begin { itemize }
+For \item to $ \forall a \in  \A , i \in I $ , there is $ aX^i = X^ia $ .
+For \item to $ \forall i,j \in I $ , there is $ X^i \cdot X^j = X^{i \circ j} $ .
+\item  \emph { elimination law }: $ X^{0_I} = 0 _{ \A } $ , that is , the sequence corresponding to $ X^{0_I} $ as the generating function is $ \{ f_i = 0 _{ \A } \} _{i \in  \IZ } $ .
+\item  $ X^{1_I} = 1 _{ \A } $ .
+\end { itemize }
+
+\end { definition }
+
+It is easy to see that the \emph { zero element } defined in the previous section describes the overflow during calculation.
+
+Let us remember that the ring formed by the entire generating function $ F(X) $ is $ \mathfrak G[X] $ .
+
+When the selected generating function is multiplied, the operation of the undetermined index naturally derives the convolution of the corresponding coefficient sequence.
+
+\begin { definition } [convolution]
+For the sequence with the convolution index system $ I $ as the subscript and $ \A $ as the coefficient, we define its convolution $ c = a * b $ :
+$$
+c_k = \sum _{i \circ j = k} a_i b_j
+$$
+\end { definition }
+
+\begin { definition } [Intercept]
+Say that $ I' $ is an interception of $ I $ if and only if $ \{ 0 , 1 \} \subseteq I' \subseteq I $ and $ \forall i \in I \backslash I', \forall j \ in I, i \circ j \notin I' \backslash  \{ 0 \} $ . Thus, the operation $ \circ _{I'} $ is defined as
+$$
+i \circ _{I'} j = \begin {cases}
+i \circ j & i \circ j \in I' \\
+0 & \mathrm {else}
+\end {cases}
+$$
+\end { definition }
+
+Vividly see, from $ the I $ intercepted in $ the I ' $ is the deletion of $ the I $ is part of "border", retaining only the rest of the message.
+
+\subsubsection { Online Algorithm }
+
+With the foreshadowing of the previous article, we next describe the association of a static algorithm with its \emph { online } form.
+
+\begin { definition } [Post-effect order]
+Defined $ the I $ Orders on $ \ preceq $ : $ I \ preceq J $ if and only if there exists $ K \ in the I $ , so $ I \ CIRC K = J $ . We call this order relationship \emph { post effect order }.
+\end { definition }
+
+\begin { lemma }
+The aftereffect order on $ I $ constitutes a partial order. And take $ 1 $ as the smallest yuan, and $ 0 $ as the largest yuan.
+\end { lemma }
+
+It is not difficult for readers to verify this lemma one by one according to the definition of partially ordered sets.
+
+\begin { definition } [after effect transformation]
+For the transformation $ \Psi : \underbracket { \A ^ \IZ  \times  \cdots  \times  \A ^ \IZ }_{ \text { $ n $个}} \rightarrow \A ^ \IZ $ , we call it \emph { post effect }, if and only if for $ \forall i \in  \IZ $ , let $ J = \{ j \mid j \preceq i \} $ , take $ a^{(1)} ,\dots , a^{(n)} $ , remember $ \psi = \Psi [a^{(1)}, \dots , a^{(n)}] $ , change any one in $ I \backslash The value in J $ will not change $ \psi _i $ .
+\end { definition }
+
+\begin { lemma }
+The convolution transformation is after-effect.
+\end { lemma }
+
+\begin { definition } [polynomial left compound]
+We can always define the composition of a polynomial and a generating function. Note polynomial $ F. (X) = \ SUM _ {0} = K ^ X ^ n-F_k K $ and sequence $ G $ corresponding generating function $ G (X-) $ . Then the compound $ h = f \circ g $ is defined as
+$$
+h(X) = \sum _{k=0}^n f_k g(X)^k
+$$
+\end { definition }
+
+\begin { lemma }
+The left compound of the polynomial is aftereffect with respect to $ g $ .
+\end { lemma }
+
+\begin { definition } [online algorithm] \label { relaxedalgo }
+For an aftereffect transformation $ \Psi $ with $ n $ inputs and a priority $ \delta for an aftereffect order preservation $ \delta : \IZ \rightarrow \mathbb Z_{ \ge 0} $ , satisfy $ i \prec j \Rightarrow \delta (i) < \delta (j) $ , we call an algorithm that \emph { online } calculates $ \Psi $ when it can cooperate with the black box to complete the following process:   
+\begin { enumerate }
+\item makes $ a^{(1)}, \dots , a^{(n)} $ all items are $ 0 $ .
+
+\ item the $ K $ from $ 0 $ recycled to the largest $ \ Delta $ , denoted $ J_k = \ { J \ MID  \ Delta (J) = K \} $ . Suppose that $ \psi ^{(k)} = \Psi [a^{(1)}, \dots , a^{((n)}] $ at this time , for all $ j \in J_k $ , change $ \psi ^{(k)}_j $ report to the black box. After all the elements in $ J_k $ are reported, the black box is for all $ 1 \lei \ len , j \in J_k $ , assign the value of $ a^{(i)}_j $ .
+\end { enumerate }
+\end { definition }
+
+Next, it is not difficult to notice:
+
+\begin { lemma }
+Suppose the problem scale is $ n $ , and a series of aftereffect transformations of the online algorithm can be completed in $ T_ 1 (n), \dots , T_k(n) $ time respectively $ \Psi _ 1 , \dots , \Psi _k The \emph { expression tree } formed by $ , might as well regard it as a transformation $ \Phi $ , the transformation is after-effect, and there is $ T_ 1 (n) + \cdots + T_k(n) $ time Online algorithm.
+\end { lemma }
+
+\subsection { Linear operator }
+
+\begin { definition }[differential operator]
+For the generating function ring $ \mathfrak G[X] $ , we say that a linear operator $ \mathfrak D $ acting on it is \emph { differential type } if and only if it satisfies the Leibniz law $ \forall f ,g \in  \mathfrak G[X] \Rightarrow  \mathfrak D(fg) = f \mathfrak D g+g \mathfrak D f $ .
+\end { definition }
+
+This is consistent with our common derivative operator, so we can easily get the following inferences:
+
+\begin { lemma }
+For a polynomial $ F $ and a $ \ mathfrak G [X-] $ generating function on $ G $ , there
+$$
+\mathfrak D (f \circ g) = (f' \circ g) \mathfrak D g
+$$
+\end { lemma }
+
+\begin { lemma } \label { der }
+For differential operators $ \mathfrak D_ 1 $ and $ \mathfrak D_ 2 $ , the linear combination $ u \mathfrak D_ 1 + v \mathfrak D_ 2 $ is also a differential operator, where $ u,v \in  \mathfrak G[X] $ .
+\end { lemma }
+
+In addition to differential operators, the following two types of operators are easy to see.
+
+\begin { definition }[Subscript transformation operator]
+For $ n \in  \mathbb Z_{ \ge 0} $ , we call the linear operator acting on the generating function $ \mathfrak S_n $ satisfies $ \mathfrak S_n X^j = X^{nj} = X^{ \ underbracket {j \circ  \dots\circ j}_{ \text { $ n $个}}} $ , all $ \mathfrak S_n $ constitute \emph { subscript transformation operator }.
+\end { definition }
+
+Such operators are widely used in P \' olya counts.
+
+\begin { definition }[dot multiplication operator]
+For the sequence $ \{ a_i \} _{i \in  \IZ } $ , the corresponding linear operator $ \mathfrak d_a $ satisfies $ \mathfrak d_a X^i = a_iX^i $ , we call it \emph { point Multiplication operator }.
+\end { definition }
+
+\subsection { Equation Solving }
+
+After the previous preparations, the general method for solving all the coefficients of the equation has been shown in the figure. The two main methods are the online method and the Newton iteration method.
+
+\paragraph { online method }
+
+The online method means finding an online algorithm that can be executed efficiently at each step of the equation calculation, and has the same pace (that is, the definition of $ \delta $ described by \ref { relaxedalgo } ). In this way, the solution equation can be transformed into a step-by-step equation verification problem. You only need to check the items step by step through the online algorithm, and then calculate the "correction value" that the equation will get when the coefficient is satisfied.
+
+The most important object in the online algorithm is nothing more than \emph { online convolution }, and the left compound of a polynomial usually needs to be transformed into a solution equation with a differential operator through the differential equation it satisfies. problem.
+
+\paragraph { Newton iteration method }
+
+The Newton iteration method mainly reduces the difficulty of solving the problem step by step by intercepting the subscript system $ I $ . Involving polynomials left composite $ F. (G) $ equation, set $ the I $ taken part $ the I ' $ already calculate the answer, correspond to $ G_ 0 $ , consider the $ F. (G) $ in $ G_ 0 $ Do Taylor expansion, that is, $ F(G) = \sum _{n \ge 0} \frac {F^{(n)}(G_0)}{n!} (G-G_ 0 )^n $ , because $ G-G_ 0 $ is known in $ I'The coefficient at the $ subscript is $ 0 $ , which can often make $ (G-G_ 0 )^n $ quickly become $ 0 $ , usually by setting $ I' $ so thatall items in $ n \ge  2 $ are eliminated , Then $ F(G) = F(G_ 0 ) + F'(G_ 0 )(G-G_ 0 ) $ becomes a linear case that is easy to handle.
+
+In many cases, the Newton iteration method is slightly more complex than the online method, and it also performs well on some concise problems. However, its performance is sometimes not satisfactory in practice. The reason is that when solving more complex equations, Newton's iteration process will have several sub-problems nested in layers. Although it has no effect on the complexity, it will double the constant round by round. .
+
+Taking the calculation of the familiar unary power series $ \exp $ as an example, taking a very detailed optimization such as the introduction in \cite { newton } can achieve approximately equal to $ 2 \frac  7 {12} $ polynomial multiplication with the same length However, the crude implementation may consume even more time for multiplication of the same length polynomials of the order of $ 7 \frac  12 $ . In the scope of OI practice, the common $ \Theta \left ( \frac {n \log ^2 n}{ \log  \log n} \right ) $ implementation based on semi-online convolution is more efficient.
+
+\section { General Generating Function }
+
+\begin { definition }[General Generating Function]
+Let $ I = \mathbb Z \cap [ 0 , n] \cup  \{ 0 _I \} $ , and for $ i,j \in I \backslash \{ 0 _I \} $ , define
+
+$$
+i \circ j = \begin {cases}
+i + j & i + j \le n \\
+0 _I & \mathrm {else}
+\end {cases}
+$$
+
+The generating function defined on $ (I, \circ ) $ is the ordinary generating function (OGF) we take when calculating.
+
+\end { definition }
+
+It can be seen that this is actually for the formal power series $ \bmod x^{n+1} $ .
+
+\subsection { convolution }
+
+\begin { theorem }[Quick Fourier Transformation]
+For a ring with a modulo $ M $ operation, the calculation of convolution can be completed in $ \Theta (n \log n) $ operations.
+\end { theorem }
+
+The most common case is that $ M $ is the NTT modulus. For general $ M $ , three-modulus NTT or split coefficient FFT is often used to complete the calculation in the larger constant $ \Theta (n \log n) $ .
+
+In the following, we use $ \Mul (n) $ to denote the complexity of polynomial multiplication.
+
+\subsubsection { Semi-online convolution }
+
+\begin { definition }[Semi-Online Convolution]
+When calculating the convolution of the sequence $ a, b $ , if the algorithm is only online for the sequence $ b $ , and the sequence $ a $ has been completely determined initially, then the algorithm is said to have calculated \emph { semi-online convolution }. Remember its complexity as $ \mathsf S(n) $ .
+\end { definition }
+
+\begin { theorem }
+
+At present, the semi-online convolution with the best complexity is analyzed by \cite { relaxmul } as
+$$
+\mathsf {S}(n) = O \left (n \log n \mathrm {e}^{2 \sqrt { \log 2 \log\log n}} \right )
+$$
+\end { theorem }
+
+Note that for $ \forall  \epsilon > 0 $ , there is $ \mathsf {S}(n) = o \left (n \log ^{1+ \epsilon } n \right ) $ , so it is semi-online in theory The complexity of convolution and convolution is very close. The algorithm that is easier to implement in practical applications is actually $ \Theta  \left ( \frac {n \log ^2 n}{ \log  \log n} \right ) $ . It has been introduced in \cite { nimberpoly }, so I won’t repeat it.
+
+\begin { theorem }
+Online convolution and semi-online convolution are difficult. That is, the complexity of online convolution is $ \R (n) $ , then there is
+$$
+\R (n)= \Theta ( \mathsf S(n))
+$$
+\end { theorem }
+
+First, semi-online convolution can obviously be reduced to online convolution, and then reverse reduction is performed. We use multiplication to construct a $ \Theta ( \mathsf S(n)) $ algorithm for calculating online convolution:
+
+\begin { enumerate }
+\item Let $ m = \lfloor n/ 2 \rfloor $ , first perform the online convolution of the subscript part of $ 0 \sim m $ .
+\item Next consider the part of $ k> m $ , consider the convolutional formula $ c_k = \sum _{i=0}^k a_ib_{ki} $ , note that $ \min (i,ki) \le  \frac K 2 $ , so $ I, Ki $ there must be one $ \ Le m $ .
+\item therefore consider dividing the remaining calculations into three parts:
+\begin { itemize }
+\item  $ i,j \le m $ , this part can be calculated immediately by $ \Mul (m) $ .
+\item  $ i \le m,j>m $ , this is actually a semi-online convolution of $ a_{0 \sim m} $ and $ b_{m+1 \sim n} $ .
+\item  $ j \le m,i>m $ , this is actually a semi-online convolution of $ b_{0 \sim m} $ and $ a_{m+1 \sim n} $ .
+\end { itemize }
+\item Therefore, the algorithm only needs to perform semi-online convolution multiply, and there is a recursive formula $ \R (n) = \R (n/ 2 ) + \Theta ( \mathsf S(n)) $ .
+\item According to the main theorem, there is $ \R (n)= \Theta ( \mathsf S(n)) $ .
+\end { enumerate }
+
+\subsection { Equation Solving }
+
+\subsubsection { Newton iteration method }
+
+In the unary generating function, only need to intercept $ I'= [ 0 , \lfloor n/ 2 \rfloor ] \cap  \mathbb Z \cup  0 _I $ , that is, first calculate $ \bmod x^{ \lfloor n/2 \rfloor +1} $ , the usual Newton iteration can be performed.
+
+In addition, this interception also eliminates the influence brought by the subscript transformation operator. For $ \mathfrak S_k F(x) = F(x^k) $ , if $ k = 1 $ then it is $ F(x) $ , otherwise $ F(x^k) $ is in $ 0 \sim n $ The coefficients of the term are only based on the coefficients of $ F(x) $ in the term of $ 0  \sim  \lfloor n/k \rfloor $ , and they have been completely determined, and they can always be regarded as fixed constants during the iteration process.
+
+\subsubsection { Online method }
+
+Compared with the Newton iteration method, the online method is freer in that it can deal with more complex formal power composition problems. Briefly, in the form of a power of $ F. (X) $ If satisfied about $ F., F. ', \ DOTS , ^ F. {(M)} $ polynomial equation $ P (X, F., F.', \ DOTS , F^{(m)})= 0 $ , based on this equation, the right compound or compound inverse can be calculated.
+
+\paragraph { formal power right compound }
+
+Given $ G(x) $ , we can get a polynomial equation of $ H=F \circ G $
+$$ Q(H,H', \dots ,H^{(m)},G^{(0)}, \dots ,G^{(m)})= 0 $$
+Then the recurrence obtained by this equation is used to solve $ H $ online . Specifically, $ Q $ can be given in the following ways:
+\begin { enumerate }
+By definition, \item has $ F(G(x)) = H(x) $ .
+\item is represented by $ H'(x) = F'(G(x))G'(x) $ , and $ F'(G(x)) $ can be expressed as $ \frac {H'}{G'( x)} $ .
+\item consists of $ H''(x) = F''(G(x))G'^ 2 (x) + F'(G(x))G''(x) $ , you can change $ F'' (G(x)) $ is represented by $ H' $ and $ H'' $ .
+\item recursively one by one, and $ F^{(k)}(G(x)) $ can be represented by $ H,H', \dots ,H^{(k)} $ .
+\item therefore can take the equation $ P $ directly into $ G(x) $ , then $ P(x,F(G(x)),F'(G(x)), \dots ,F^{( m)}(G(x))) = 0 $ , replace all items with the general points after the formula expressed by $ H $ , then the equation $ Q $ is obtained .
+\end { enumerate }
+
+\paragraph { Formal power compound inverse }
+
+For the compound inverse $ F(G(x)) = x $ , we can get a polynomial equation of $ G $
+$$ Q(x,G,G', \dots ,G^{(m)}) = 0 $$
+Then the recurrence obtained by this equation is used to solve $ G $ online . Specifically, $ Q $ can be given in the following ways:
+\begin { enumerate }
+  By definition, \item has $ F(G(x))=x $ .
+  Taking the derivation on both sides of \item can get $ F'(G(x))G'(x) = 1 $ , that is, $ F'(G(x)) = \frac  1 {G'(x)} $ .
+  Continuing to find the derivation on both sides of \item , you can get $ F''(G(x))G'(x) = \frac {-G''(x)}{G'(x)^2} $ .
+  \item recursively one by one, and $ F^{(k)}(G(x)) $ can be represented by $ G,G', \dots ,G^{(k)} $ .
+  \item can therefore take the equation $ P $ directly into $ G(x) $ , then $ P(x,F(G(x)),F'(G(x)), \dots ,F^{( m)}(G(x))) = 0 $ , replace each item with the above-mentioned formula and then the general points, then the equation $ Q $ is obtained .
+\end { enumerate }
+
+Below we use a classic question to help readers confirm how to systematically rewrite the equation of the generating function into a calculation method.
+
+\begin { problem }[Unlabeled rooted tree]
+There are $ a_k $ kinds of nodes with a weight of $ k $ . Ask how many kinds of unlabeled rooted trees satisfy the sum of the weights of all nodes to be $ n $ . Guarantee $ 1 \le n \le 10 ^ 5 $ , congruence $ 998244353 $ . 
+\end { problem }
+
+\begin { solution }
+First, according to the symbolic method \footnote {Symbolic Method, see the theory of \cite [AI]{ acomb }}, set the generating function of the node as $ A(x) = \sum _k a_kx^k $ , the generating function can be listed immediately The equation $ T(x) = A(x) \exp  \left ( \sum _k \frac {T(x^k)}{k} \right ) $ .
+
+First, notice that when it has been confirmed that $ T (the X-) $ of $ \ Le N- 1 $ -order terms, it is uniquely identified by the expressions $ the n- $ -order terms, then get $ T (the X-) $ of $ the n- $ Sub-items. We disassemble the right side of the equation into the structure of the expression tree, as shown in the figure \ref { figexpr }, we only need to break down each operation problem in the expression one by one.
+
+\begin { figure }[htbp]
+\centering
+\begin { tikzpicture }[grow=left]
+\tikzset {level distance=60pt}
+\Tree [
+.mul
+  [. $ A(x) $ ]
+  [. $ \exp $ [. $ \displaystyle\sum _{k \ge 1} \frac { \cdot (x^k)}{k} $  $ T(x) $ ]]
+]
+\end { tikzpicture }
+\caption {expression tree} \label { figexpr }
+\end { figure }
+
+Among them, mul is nothing more than semi-online convolution, and $ \sum _{k \ge 1} \frac { \cdot (x^k)}{k} $ is not a bottleneck, so we only need to examine how to calculate $ \exp online $ . We consider that $ \me ^x $ satisfies the differential equation $ ( \me ^x)'= \me ^x $ , so if $ G = \me ^F $ , the differential equation $ G'=GF' $ can be obtained . Only need to know the $ \le n- 1 $ sub-items of $ G $ and $ F $The $ \ Le the n- $ -order terms can be obtained via an online convolution $ G $ of $ the n- $ -order terms.
+
+From this, we get a complete calculation process, as shown in Figure \ref { figdiag }, through the intermediate process to maintain two auxiliary generating functions $ P_ 1 (x), P_ 2 (x) $ , we transform the problem For a set of simultaneous online convolution problems.
+
+\begin { figure }[htbp]
+\centering
+\tikzset {global scale/.style={
+    scale=#1,
+    every node/.append style={scale=#1}
+  }
+}
+\begin { tikzpicture }[global scale=0.8,node distance=5mm and 5mm,
+src/.style={
+rectangle,
+minimum size=6mm,
+very thick,
+draw=green!50!black!50,fill=white},
+data/.style={
+rectangle,
+minimum size=6mm,
+very thick,
+draw=blue!50!black!50,fill=white},
+op/.style={
+rounded rectangle,
+minimum size=6mm,
+thick,draw=black,fill=white},
+skip loop/.style={to path={-- ++(0,#1) -| ( \tikztotarget )}},
+thick,
+every new ->/.style={shorten >=1pt},
+graphs/every graph/.style={edges=rounded corners},
+hv path/.style={to path={-| ( \tikztotarget )}},
+vh path/.style={to path={|- ( \tikztotarget )}}
+]
+
+\matrix [row sep=1mm,column sep=5mm] {
+&&&&&&&& \node [src] (a) { $ A(x) $ }; \\
+&& \node (a2) {}; &&&&&&&& \node [op] (mul2) {mul}; & \node [data] (fint) { $ T(x) $ }; & \node (p1) {}; \ \
+\node [src] (srct) { $ T(x) $ }; &
+\node [op] (ops) { $ \displaystyle\sum _{k \ge 1} \frac { \cdot (x^k)}{k} $ }; &&
+\node [data] (p1) { $ P_ 1 (x) $ }; &
+\node [op] (opd) { $ \mathrm {D} $ }; &
+\node [data] (p1d) { $ P_ 1 '(x) $ }; & \node (a1) {}; &
+\node [op] (mul1) {mul}; &
+\node [data] (p2) { $ P_ 2 (x) $ }; \\
+&&&&&&&&& \node (a3) {}; & \\
+};
+
+\graph {
+  (srct) -> (ops) -> (p1) -> (opd) -> (p1d) -> (mul1) -> (p2) ->[hv path] (mul2);
+  (a) ->[hv path] (mul2) -> (fint);
+  (fint) ->[skip loop=-25mm] (srct);
+  (p2) ->[skip loop=-7mm] (a1);
+};
+
+\begin { pgfonlayer }{background}
+  \path [fill=red!20,draw=red!50,thick]
+    (a2.south) rectangle
+    (a3);
+  \path (a2.north) - (a3.north) node[midway,above=1mm] { $ \exp $ };
+\end { pgfonlayer }
+\end { tikzpicture }
+\caption {calculation process} \label { figdiag }
+\end { figure }
+
+In fact, what we got is also an online algorithm, which supports the number of plans whose weight sum is $ k $ after given $ a_k $ .
+\end { solution }
+
+\subsubsection { Lagrange inversion }
+
+For unary generating functions, Lagrange inversion effectively links a generating function to the coefficients of its compound inverse. In order to reflect the grace of the form, we need to describe the Lagrange inversion under the Laurent series of the form. This article only shows a proof method on a domain with a characteristic of $ 0 $ . For a general proof on the general ring, please refer to \cite [Sec. 1.2]{ combenum }.
+
+\begin { definition }[Form Laurent series]
+The Laurent series of the form on the recording domain $ K $ is $ K((x)) $ or $ K[[x]][x^{-1}] $ , that is, for $ f(x) \in K(( x)) $ , if $ f \neq  0 $ , there is a sequence of numbers $ \{ a_n \} _{n \ge n_0} $ , there is
+$$
+f(x) = x^{n_0} \left ( \sum _{n \ge 0} a_{n+n_0} x^n \right )
+$$
+
+Among them are $ a_{n_0} \neq  0 $ .
+
+For this case $ K \ in  \ mathbb the Z $ , easily defined in $ K ((X)) $ power within $ F ^ K $ :
+$$
+f(x)^k = x^{n_0 k} \left ( \sum _{n \ge 0} a_{n+n_0} x^n \right )^k
+$$
+\end { definition }
+
+\begin { lemma }[formal stay number]
+For the power series $ F(x) $ satisfies $ n_ 0 = 1 $ , then for $ \forall k \in  \mathbb Z $ , there is
+$$
+[x^{-1}]F'(x)F^k(x)=[k=- 1 ]
+$$
+\end { lemma }
+
+\begin { proof } Consider when $ k \neq - 1 $ , we have $ F'(x)F^k(x)=( \frac  1 {k+1} F(x)^{k+1} ) ' $ , and $ (X ^ 0 )' = 0 X ^ {--1} $ , so $ - . 1 $ views coefficient at this time is bound to $ 0 $ . When $ k=- 1 $ , set $ F(x) = a_ 1 x + a_ 2 x^ 2 + \cdots $ , there is
+\begin { align* }
+\frac {F'(x)}{F(x)} &= \frac {a_1 + 2a_2x + \cdots }{a_1 x + a_2 x^2 + \cdots } \\
+&= x^{-1} \frac {1 + 2 \frac {a_2}{a_1} x + \cdots }{1 + \frac {a_2}{a_1} x + \cdots }
+\end { align* }
+
+Thus $ K = - 1 $ when $ - 1 $ order term coefficient $ 1 $ .
+\end { proof }
+\begin { theorem }[Lagrange inversion]
+For the power series $ F(x) $ satisfies $ n_ 0 = 1 $ and $ G(x) $ satisfies $ F(G(x)) = x $ is its compound inverse, then for $ n,k \in  \ mathbb Z $ , yes
+
+$$
+n[x^n]F(x)^k = k[x^{-k}]G(x)^{-n}
+$$
+\end { theorem }
+
+\begin { proof }
+We consider bringing into the compound relation $ F(G(x))=x $ , there is
+\begin { align* }
+F(G(x))^k &= x^k \\
+(F^k)'(G)G' &= kx^{k-1} \\
+\sum _{i} i([x^i] F^k(x)) G^{i-1}G' &= kx^{k-1} \\
+\sum _{i} i([x^i] F^k(x)) G^{i-1-n}G' &= kx^{k-1}G^{-n} \\ 
+[x^{-1}] \sum _{i} i([x^i] F^k(x)) G^{i-1-n}G' &= [x^{-1}]kx ^{k-1}G^{-n} \\ 
+n[x^n] F^k &= [x^{-1}]kx^{k-1}G^{-n} \\ 
+n[x^n] F^k &= k[x^{-k}]G^{-n}
+\end { align* }
+
+Therefore, the original formula is proved.
+\end { proof }
+
+Compared with this symmetrical form, the more popular version of this formula in the past is a compound form.
+
+\begin { lemma }
+For the power series $ H(x) \in K((x)) $ , we have
+
+$$
+[x^n]H(F(x)) = \frac  1 n [x^{n-1}] H'(x) \left ( \frac x{G(x)} \right )^n
+$$
+\end { lemma }
+
+Readers only need to confirm the situation of $ H(x) = x^k $ to verify, so I won’t repeat it here.
+
+\begin { problem }[Slime and Sequences \footnote {Source: Xu Tingqiang and I co-commanded, \url {http://codeforces.com/problemset/problem/1349/F2}, the derivation process of obtaining the generated function has been omitted} ]
+Calculate $ [z^n] \frac {t( \me ^{z(1-t)}-1)}{(1-z)(1-t \me ^{z(1-t)})) The coefficient of $ is congruence $ 998244353 $ , which guarantees $ 1 \le n \le  10 ^ 5 $ .
+\end { problem }
+
+\begin { solution } consider $ \left ([z^n] \frac {t( \mathrm e^{z(1-t)}-1)}{(1-z) (1-t \mathrm e^ {z(1-t)})} \right ) + 1 = ( 1 -t)[z^n] \frac  1 {(1-z)(1-t \mathrm e^{z(1-t) })} $ , used to simplify expressions.
+
+Next we set $ z = \frac u{1-t} $ , there is
+$$
+[z^n] \frac  1 {(1-z)(1-t \mathrm e^{z(1-t)})} = ( 1 -t)^n[u^n] \frac 1 {( 1- \frac u{1-t})(1-t \mathrm {e}^u)}
+$$
+
+Next do fractional decomposition
+\begin { align* }
+& \quad (1-t)[z^n] \frac 1{(1-z)(1-t \mathrm e^{z(1-t)})} \\
+&= [u^n] \frac {(1-t)^{n+2}}{(1- \frac {t}{1-u})(1-t \mathrm e^u)(1- u)} \\
+&= (1-t)^{n+2} [u^n] \left ( \frac {- \mathrm e^u}{ \left ( \mathrm e^u u- \mathrm e^u+1 \ right ) \left (1-t \mathrm e^u \right )}+ \frac { \frac {1}{1-u}}{ \left ( \mathrm e^u u- \mathrm e^u+1 \right ) (1- \frac {t}{1-u})} \right ) \end { align* }
+
+Therefore, the key to the problem is to extract $ [u^n] \frac {- \mathrm e^u}{ \left ( \mathrm e^u u- \mathrm e^u+1 \right ) \left (1 -t \mathrm e^u \right )} $ part, we set $ F(u) = \me ^u- 1 $ , then the BGF table can be $ A(F)/( 1 -t( 1 + F)) $ form, from the compound inverse $ G = \ln ( 1 +u) $ can be obtained:
+\begin { align* }
+[u^n] \frac {A(F)}{(1-t(1+F))}
+&= \frac 1n[u^{n-1}] \left ( \frac {A(u)}{1-t(1+u)} \right )' \left ( \frac u{G(u) } \right )^n \\
+&= \frac 1n[u^{n-1}] \left ( \frac {tA(u)}{(1-t(1+u))^2} + \frac {A'(u)}{ 1-t(1+u)} \right ) \left ( \frac u{G(u)} \right )^n
+\end { align* }
+
+Therefore, the key is to calculate the coefficient representation of $ A(u) $ , which is represented by $ A(F(u)) = \frac {- \mathrm e^u}{ \left ( \mathrm e^u u- \mathrm e ^u+1 \right )} $ knows $ A(u) = \frac {- \mathrm e^G}{ \left ( \mathrm e^G G- \mathrm e^G+1 \right )} $ . At this point, the problem can be solved within $ \Theta (n \log n) $ time.
+\end { solution }
+
+The normally known as "extended Lagrange inversion" While there have been very strong, but still some inconveniences: if extended to the general ring $ R $ on, if $ F (the X-) $ of first entry in the $ R $ Irreversible , It can be seen that $ G $ is still well-defined, but the above formula will require $ n $ to be reversible in $ R $ , which may not help us calculate the result. The most extreme case is that this formula cannot tell us how to extract coefficients for the case of $ n = 0 and k < 0 $ . Therefore, we sometimes need to consider a variant:
+
+\begin { lemma }[Alternative Lagrange Inversion]
+Keep the original conditions unchanged, there are
+$$
+[x^n]F^k = [x^{-k-1}]G'G^{-n-1}
+$$
+\end { lemma }
+
+\begin { proof } In the first step, we are not seeking the derivative, but multiplying by $ G'G^{-n-1} $ , there will be
+\begin { align* }
+F(G(x))^k &= x^k \\
+\sum _i ([x^i]F^k(x))G^i &= x^k \\
+\sum _i ([x^i]F^k(x))G'G^{in-1} &= x^k G'G^{-n-1} \\
+[x^{-1}] \sum _i ([x^i]F^k(x))G'G^{in-1} &= [x^{-1}]x^k G'G^ {-n-1} \\
+[x^n]F^k &= [x^{-1}]x^k G'G^{-n-1} \\
+&= [x^{-k-1}]G'G^{-n-1}
+\end { align* }
+\end { proof }
+
+Although this form no longer has sufficient symmetry, it successfully circumvents division. We can also write it in compound form.
+
+\begin { lemma } Under the same conditions as the previous lemma, we have
+$$
+[x^n] H(F(x)) = [x^n]H(x) \left ( \frac {x}{G(x)} \right )^{n+1}G'(x)
+$$
+\end { lemma }
+
+The proof is still the same, so I won't repeat it.
+
+\begin { problem }[simple popularization group count \footnote {source: Dai Jiangqi, enhanced from \url {https://acm.nflsoj.com/problem/308}, the derivation process of obtaining the generating function has been omitted} \ label { pjcount }]
+Suppose the power series $ F(x) $ satisfies $ F = \frac x{(1-(m-1)F)^{k-1}} $ , and find $ [x^n] \frac  1 {1- mF} $ Congruent prime number $ p $ , guarantee $ 1 \le n,k \le  10 ^ 9 , 1 \le m <p \le  10 ^ 5 $ .
+\end { problem }
+
+\begin { solution }
+The compound inverse of $ F $ can be obtained as $ G=x( 1 +(m- 1 )x)^{k-1} $ , according to the alternative Lagrange inversion, there is
+\begin { align* }
+[x^n] \frac 1{1-mF}
+&= [x^n] \frac 1{1-mx} \left ( \frac {x}{G(x)} \right )^{n+1}G'(x) \\
+&= [x^n] \frac 1{1-mx}(1-(m-1)x)^{-(k-1)(n+1)} \cdot (1-(m-1)x )^{k-2}(1-(m-1)kx) \\
+&= [x^n] \frac 1{1-mx}(1-(m-1)x)^{-kn+n-1}(1-(m-1)kx)
+\end { align* }
+
+Since the modulus is very small, we can perform a process similar to digital DP. Now the answer we seek is in the form of $ [x^n] \frac  1 {1-mx}( 1 -(m- 1 )x)^mf( x) $ , according to Lucas theorem $ \binom {np+n_0}{mp+m_0} \equiv  \binom nm \binom {n_0}{m_0} \pmod p $, we can see that $ m = m_ 1 p+r $ and $ n=n_ 1 p+s $ then there is
+\begin { align* }
+& \quad [x^n] \frac 1{1-mx}(1-(m-1)x)^mf(x) \\
+& \equiv [x^n] (1-mx)^{-p+(p-1)}(1-(m-1)x)^{m_1p+r} f(x) \\
+& \equiv [x^{n_1p+s}] \frac 1{1-mx^p}(1-(m-1)x^p)^{m_1} (f(x)(1-mx)^{ p-1}(1-(m-1)x)^r) \\
+& \equiv [x^{n_1}] \frac 1{1-mx}(1-(m-1)x)^{m_1} f_1(x)
+\end { align* }
+
+Wherein $ F_ . 1 (X) $ is $ F (X) ( . 1 -mx). 1-^ {P} ( . 1 - (M- . 1 ) X) ^ R & lt $ extraction congruence $ P $ I $ S $ under the resulting scaling factor, may be $ \ Theta (P \ CDOT  \ deg F) $ calculates the summarized found in $ F LeftArrow \ F_ . 1 $ this iterative process, there is always $ \ deg F \ Le  . 1 $ . Therefore, the complexity is the single round complexity $ \Theta (p) $ multiplied by the number of iteration rounds$ \log _p n $ , which is $ \Theta (p \log _p n) $ .
+\end { solution }
+
+\subsection { Evaluation of distant coefficients }
+
+\subsubsection { Linear recursion }
+
+Next, we introduce a linear recursive evaluation \emph { low bit first algorithm } (LSB-first, least significant bit first).
+
+Different from Fiduccia 's consideration of $ x^n \bmod Q(x) $ directly through fast power , the main idea of ​​the low-order first algorithm is to consider converting linear recursion into the form of generating function $ \frac {P(x)}{ Q(x)} $ . Note that we easily $ \ mathsf M (K) $ obtained within a time $ P (X) $ , $ \ left ( \ SUM _ {I = 0} ^ {K-. 1} F_i X ^ I \ right ) \ CDOT The $ 0 \sim k- 1 $ term of Q(x) $ is what you want. Next we consider the following equation:
+$$
+\frac {P(x)}{Q(x)} = \frac {P(x)Q(-x)}{Q(x)Q(-x)}
+$$
+
+We pay attention to remembering $ V(x)=Q(x)Q(-x) $ , and analyzing the coefficients, we can find that $ V(x) $ only has even-order terms, so we get the decomposition
+$$
+\frac {P(x)}{Q(x)} = \frac {E(x^2)}{U(x^2)} + x \frac {O(x^2)}{U(x^ 2)), \quad U(x^ 2 )=Q(x)Q(-x)
+$$
+
+Because this fills up the binary $ 0 $ and $ 1 $ bits respectively, we only need to recurse to one side. And $ n \leftarrow  \lfloor n/ 2  \rfloor $ .
+
+Therefore , the calculation is completed in $ \Theta ( \Mul (k)) $ in each round. After the iteration of $ \log _ 2 n $ , there is already $ n = 0 $ , so the algorithm complexity is $ \Theta ( \Mul (k) \log n) $ .
+
+This algorithm has a lot of room for optimization. In the case where we usually have NTT modulus, \emph {The same FFT implementation can make our constants approximately the same as the original method } $ \frac {1}{3} $ . Due to space limitations, this article skips its optimization details.
+
+This process only uses polynomial multiplication each time, and does not need to implement polynomial inversion. In general, this algorithm has the dual advantages of implementation and efficiency.
+
+% \subsubsection{Small characteristic finite field algebraic power series}
+
+% When counting with OGF, the results of a large class of problems are within the category of algebraic power series. For example, Catalan number representing the number of grid paths of a type $C(x)=\frac{1-\sqrt{1-4x}}{2x}$, large Schr\"oder number $G(x)=\frac{ 1-x-\sqrt{1-6x+x^2}}{2x}$, Motzkin number $M(x)=\frac{1-x-\sqrt{1-2x-3x^2}}{2x ^2}$. When evaluating remote coefficients, a universal method is to find an integral recurrence of the sequence. This method has been explained in \cite{zzq}. However, the integral recurrence There is often a denominator in. If $\A$ takes the finite field of $\operatorname{char} K = O(n)$, most of them will appear $0$ in the denominator, leading to the failure of the entire method.
+
+% However, when the characteristic $p$ of the finite field is small, this condition leads us to discover new properties, the most critical of which is a corollary of Lucas theorem.
+
+% \begin{theorem}
+% For the domain $K$ with the characteristic $p$, any form of power series $f\in K[[x]]$, there is
+% $$
+% f(x)^p = \left( \sum_{n\ge 0} a_n x^n \right)^p = \sum_{n\ge 0} a_n^px^{np}
+% $$
+% \end{theorem}
+
+% \begin{proof}
+% First of all, we consider the binomial coefficient $\binom pk \bmod p$, and decompose $\binom pk = \frac{p!}{k!(pk)!}$ according to prime factors. We can see that only $k=0$ or $ When p$, the formula does not contain prime factor $p$, so $\binom pk \bmod p$ takes the value of $1$ when $k=0$ or $p$, otherwise it is $0$.
+%It is only necessary to prove that for any $n$ polynomial of degree $n$, set polynomial $f(x) = f_0(x) + a_nx^n, \deg f_0 <n$, consider for $(f_0(x) + a_nx^n)^p$ binomial expansion. From the foregoing analysis, we can see that in $K$, since the feature is $p$, only $f_0(x)^p + (a_nx^n)^p$ remains. That is, $a_n^px^{np}$, which can be established by induction.
+% \end{proof}
+
+% Looking for this theorem, we will construct a different recurrence. We have already had a glimpse of this method in the example \ref{pjcount}. Next, we mainly improve the method of \cite{palg} from $\mathbb F_p$ to $\mathrm{GF}(p^k)$.
+
+% \begin{definition}[$p$-base equation]
+% For the finite field $K=\mathrm{GF}(p^k)$ with characteristic $p$, we say that the generating function $F(x)$ satisfies a $n$ order $p$-system equation if and Only if for $0\le i\le n$, defined on $P_i(x)\in K[x]$ has
+% $$
+% \sum_i P_{i}(x)F_i(x^{p^i}) = 0
+% $$
+% Among them, set $F(x)=\sum_{n\ge 0}f_nx^n$, and write $F_i(x)=\sum_{n\ge 0}f_n^{p^i}x^n$.
+% \end{definition}
+
+% It’s easy to see that such a generating function equation
+
+\section { Multiple power series }
+
+\begin { definition }
+For $ . 1 \ Le J \ Le K $ provided $ \ mathfrak G_J [x_j] $ are defined at $ I_j = \ mathbb the Z \ CAP [ 0 , n_j- . 1 ] \ Cup  \ { 0 _ I_j {} \} $ on The undetermined element is $ x_j $ , then $ \mathfrak G_ 1 [x_ 1 ] \times  \cdots  \times  \mathfrak G_k[x_k] $ is $ k $The ring of general generating function of meta-elements can also be written as $ \A [x_ 1 , \dots ,x_k]/(x_ 1 ^{n_1}, \dots ,x_k^{n_k}) $ . Next remember $ n = n_ 1  \times  \cdots  \times n_k $ .
+\end { definition }
+
+\subsection { convolution }
+
+If a simple high-dimensional DFT is performed, each dimension will almost double the length of the array, resulting in the amount of calculation and space for $ \Omega (n 2 ^k) $ , which is particularly unacceptable in the case of high dimensions.
+
+The reason is that if DFT does not double the length of the array, what it actually does is circular convolution, and the overflow of the subscript will pollute the answer we are asking for. A more straightforward idea is to extend one dimension to confirm the actual total degree $ \sum _{l=1}^k i_l $ . In this way, we get an efficient algorithm when all $ n_l $ is small:
+
+\paragraph { interpolation conversion }
+For $ 1 \le l \le k $ , if there is $ \alpha ^{(l)}_ 0 , \dots , \alpha ^{(l)}_{n_l-1} $ such that $ i \neq j \ Leftrightarrow  \alpha ^{(l)}_i- \alpha ^{(l)}_j $ has an inverse element in $ \A $ , then let
+$$
+\tilde F = \sum _{i_1=0}^{n_1-1} \cdots  \sum _{i_k=0}^{n_k-1} f_{i_1, \dots ,i_k} x_ 1 ^{i_1} \ cdots x_k^{i_k} t^{ \sum _{l=1}^k i_l}
+$$
+
+We call $ t $ is \ emph { accounting bit }, about $ t $ polynomials called \ emph { placeholder polynomial }. Called \ emph { interpolation converting } to $ \ tilde are F. $ Into $ \ { \ DOT F_ {i_1, \ DOTS , i_k} (T) \} $ , there
+$$
+\dot f_{i_1, \dots ,i_k}(t) = \tilde F( \alpha ^{(1)}_{i_1}, \dots , \alpha ^{(k)}_{i_k},t)
+$$
+
+If you need to calculate $ F \times G $ , you only need to interpolate it into $ \dot f, \dot g $ and multiply it item by item. Regarding the convolution of $ t $ , apply the inverse transformation of the interpolation transformation to obtain $ \ tilde H $ satisfied
+$$
+[x_ 1 ^{i_1} \cdots x_k^{i_k}] (F \times G) = \left [x_ 1 ^{i_1} \cdots x_k^{i_k}t^{ \sum _{l=1}^ k i_l} \right ] \tilde H
+$$
+
+If you remember $ d = \sum _{l=1}^k (n_l- 1 ) $ , it can be seen that the above algorithm has $ \Theta ( \Mul (n)d + \Mul (d)n) $ in the best case The complexity of, but its conditions are harsh, and there is no advantage when $ d $ is large. But through another structure, we can get an excellent complexity:
+
+\begin { theorem }
+High-dimensional convolution can be completed in $ \Theta (k \Mul (n)) $ time.
+\end { theorem }
+
+We consider encoding the high-dimensional sequence into an unconventional base number, that is, the subscript $ (i_ 1 , \dots ,i_k) $ is mapped to
+$$
+i = i_ 1 + i_ 2 \cdot n_ 1 + \cdots + i_k \cdot n_ 1 \cdots n_{k-1}
+$$
+
+Obviously, the original subscript operation corresponds to the addition of \emph { no carry occurred } after the mapping .
+
+\begin { definition }[carry placeholder]
+Define the placeholder function $ \chi $ as
+$$
+\chi (i) = \left \lfloor  \frac {i}{n_1} \right \rfloor + \left \lfloor  \frac {i}{n_1n_2} \right \rfloor + \cdots + \left \lfloor  \frac { i}{n_1 \cdots n_{k-1}} \right \rfloor
+$$
+
+The carry placeholder $ t $ derived from this function gets its placeholder polynomial $ \tilde F = \sum _i f_i x^it^{ \chi (i)} $ .
+\end { definition }
+
+\begin { lemma }
+For $ i+j<n $ , the placeholder function satisfies
+$$
+0 \le  \chi (i) + \chi (j)- \chi (i+j) \le k- 1
+$$
+
+Among them, $ 0 \le  $ takes equal if and only when $ i, j $ is added without carry.
+\end { lemma }
+
+\begin { proof }
+Noted that only $ 0 \ Le  \ left \ lfloor  \ FRAC {{I} of n_1} \ right \ rfloor + \ left \ lfloor  \ FRAC {J} of n_1} { \ right \ rfloor - \ left \ lfloor  \ FRAC {I +j}{n_1} \right \rfloor \le  1 $ , where $ 0 \le  $ is equal and only if the addition of the lowest bit is not carried. In the same way, each term in the summation of $ \chi $ has the same properties.
+\end { proof }
+
+So we can directly calculate $ \ tilde are F. (X, T) \ Times  \ tilde are G (X, T) \ BMOD (^ - K-T . 1 ) $ , of $ (I_ . 1 , \ DOTS , i_k) $ item is the $ x^it^{ \chi (i) \bmod k} $ secondary coefficient. At this point, we can perform DFT on $ x $ , and then perform $ \Theta (k^ 2 ) $ multiplication on $ t $ dimensional violence (because $ k \le \log _ 2 n $ ) Complete the calculation, and the complexity is $ \Theta (k \Mul (n)) $ .
+
+In a sense, the structure of the above-mentioned placeholder function is actually unique. If the placeholder function satisfies $ \chi (i) = \sum _{j=1}^k i_j \cdot c_j $ , it is easy to find The whole symbol also meets this requirement, and its linear combination also meets this requirement. Each carry requirement is equivalent to subtracting $ k_j $ from $ i_j $ every time , and $ i_{j+1} $ plus $ 1 $ after $ \chi (i) $ changes exactly to $ 1 $ , which requires a $ k_j \ CDOT C_J - C_ {J} = +. 1 . 1 $ . In total for $ 1 \le j \le k- 1$ Has a constraint, sothe degree of freedom of $ \chi $ is $ 1 $ , for any $ c $ , $ \widehat  \chi (i) = \chi (i) + c \cdot i $ is also a requirement The placeholder function. At this time, the $ \chi (i) $ given aboveis a special solution.
+
+It is easy to find that the aforementioned subscript mapping naturally gives an online algorithm calculation order, so there is
+
+\begin { lemma }
+Multivariate online convolution can be completed in $ O(k \R (n)) $ .
+\end { lemma }
+
+This calculation sequence can also directly affect the calculation of Newton's iteration method. Its correctness is not difficult to explain, because we consider the high-dimensional convolution as $ \sum _i f_i x^it^{ \chi (i)} $ convolution with placeholder polynomials , do any operation on it, will produce some $ J < \ Chi (I) $ a $ X ^ J ^ IT $ item, and these items are no longer on the form $ X ^ {^ IT \ Chi (I)} $ entry contributes. Therefore, we actually only maintain the upper contour formed by the $ \chi (i) $ of this polynomial during Newton iteration .
+
+\subsection { Differential operator }
+
+When differentiating a certain element $ x_j $ of a multivariate function, all the information in the $ [x_j^ 0 ] $ part will be lost , but in many calculations, we only use the properties of the lemma \ref { der }, so take The linear combination of each element differential $ \mathfrak D= \sum _j c_j \frac { \partial }{ \partial x_j} $ is also available. But in this way , the coefficients of $ x_ 1 ^{i_1} \dots x_k^{i_k} $ are scattered to $ k $ positions, which is also not conducive to calculation.
+
+The reason is that it is better for us to have an operator that is both a differential type and a point multiplication type. And taking $ \mathfrak D = \sum _j c_j x_j \frac { \partial }{ \partial x_j} $ will satisfy this condition, which makes
+$$
+\mathfrak D x_ 1 ^{i_1} \dots x_k^{i_k} = \mathfrak (c_ 1 i_ 1 + \dots +c_ki_k)x_ 1 ^{i_1} \dots x_k^{i_k}
+$$
+In fact, this also covers all situations.
+\begin { lemma }
+A linear operator is both a differential type and a point product type if and only if it is in the form of $ \sum _j c_j x_j \frac { \partial }{ \partial x_j} $ .
+\end { lemma }
+\begin { proof }
+$ \Leftarrow $ : Verify one by one. $ \Rightarrow $ : Just consider making $ c_j = \frac { \mathfrak D x_j}{x_j} $ .
+\end { proof }
+In practice, the following two ways of taking $ \mathfrak D $ are more useful.
+\begin { itemize }
+\item takes $ \mathfrak D= \sum _j x_j \frac { \partial }{ \partial x_j} $ so as to minimize the value of the dot product.
+\item takes $ \mathfrak D x^i = ix^i $ , so you can completely copy the writing of one-variable polynomial in the implementation.
+\end { itemize }
+
+\subsection { Multiple Lagrange Inversion }
+
+When we discuss the multivariate Lagrange inversion, the first thing we noticed is that it is impossible to define a compound inverse for a multivariate power series, because a multivariate power series needs to take in multiple parameters instead of one.
+
+\begin { definition }[Tree compound equation]
+For $ G_i \in R[[ \mathbf x]] $ , where $ \mathbf x = (x_ 1 , x_ 2 , \dots , x_n) $ . And $ G_i( \mathbf  0 ) \neq  0 $ , then let $ \mathbf F = (F_ 1 , F_ 2 , \dots , F_n) $ satisfy $ F_i = x_i G_i ( \mathbf F) $ . Remember that $ \mathbf F $ is composed of $A set of \emph { tree compound equations }defined by \mathbf G $ .
+\end { definition }
+
+It is very vivid to call it \emph { tree shape}. From the perspective of OGF, $ \mathbf G $ can be considered to give a family of rooted trees. It stipulates that the $ i $ node , The number of setting schemes for each child collection. And $ F_i $ is a rooted tree with the specified $ i $ node as the root.
+
+For example, the figure \ref { figcomp } shows one of the contributions when the coefficient $ [x_ 1 x_ 2 x_ 3 x_ 4 x_ 5 ^ 2 ]F_ 1 $ is extracted , and its contribution is $ ([x_ 2 x_ 3 ]G_ 1 ) \cdot ([x_ 4 x_ 5 ^ 2 ]G_ 2 ) \cdot G_ 3 ( \mathbf  0 )G_ 4 ( \mathbf  0 )G_ 5 (\mathbf  0 )^ 2 $ .
+
+\begin { figure }[htbp]
+\centering
+\begin { tikzpicture }[>=latex']
+  \tikzstyle {n} = [draw,shape=circle,minimum size=2em,
+                      inner sep=0pt,fill=white!20]
+% %
+  \node (1) at (135.0bp,162.0bp) [n, thick] { $ \mathbf  1 $ };
+  \node (2) at (99.0bp,90.0bp) [n] { $ 2 $ };
+  \node (3) at (171.0bp,90.0bp) [n] { $ 3 $ };
+  \node (4) at (27.0bp,18.0bp) [n] { $ 4 $ };
+  \node (5) at (99.0bp,18.0bp) [n] { $ 5 _ 1 $ };
+  \node (6) at (171.0bp,18.0bp) [n] { $ 5 _ 2 $ };
+  \draw [->] (1) - (2);
+  \draw [->] (1) - (3);
+  \draw [->] (2) - (4);
+  \draw [->] (2) - (5);
+  \draw [->] (2) - (6);
+% %
+  \node [left=1em] at (1.west) (c1) { $ [x_ 2 x_ 3 ]G_ 1 $ };
+  \node [left=1em] at (2.west) (c2) { $ [x_ 4 x_ 5 ^ 2 ]G_ 2 $ };
+  \node [right=1em] at (3.east) (c3) { $ G_ 3 ( \mathbf  0 ) $ };
+  \node [left=1em] at (4.west) (c4) { $ G_ 4 ( \mathbf  0 ) $ };
+  \node [left=0.4em] at (5.west) (c5) { $ G_ 5 ( \mathbf  0 ) $ };
+  \node [left=0.4em] at (6.west) (c6) { $ G_ 5 ( \mathbf  0 ) $ };
+  \begin { pgfonlayer }{background}
+    \draw [rounded corners=2em,line width=3em,green!20,cap=round, draw opacity=0.8]
+            (2.center) - (4.center);
+    \draw [rounded corners=2em,line width=3em,green!20,cap=round, draw opacity=0.8]
+            (2.center) - (5.center);
+    \draw [rounded corners=2em,line width=3em,green!20,cap=round, draw opacity=0.8]
+            (2.center) - (6.center);
+            
+    \draw [rounded corners=2em,line width=3em,blue!20,cap=round, draw opacity=0.8]
+            (1.center) - (2.center);
+    \draw [rounded corners=2em,line width=3em,blue!20,cap=round, draw opacity=0.8]
+            (1.center) - (3.center); 
+    \end { pgfonlayer }
+\end { tikzpicture }
+\caption {Tree compound equation ~ example} \label { figcomp }
+\end { figure }
+
+\begin { theorem }[Multi-Lagrange] \label { multilag }
+For $ H \ in R & lt (( \ mathbf X)) $ and by a $ \ mathbf G $ tree composite equation defined $ \ mathbf F. $ , Denoted $ \ mathbf X ^ { \ mathbf K} = X_ . 1 ^ {k_1 } x_ 2 ^{k_2} \cdots x_n^{k_n} $ . Have
+$$
+[ \mathbf x^{ \mathbf k}]H( \mathbf F) = [ \mathbf x^{ \mathbf k}] H \mathbf G^{ \mathbf k} \left  \| 
+\delta _{i,j}- \frac {x_j}{G_i( \mathbf x)} \frac { \partial G_i ( \mathbf x)}{ \partial x_j}
+\right  \| \footnote {
+Among them, $ \delta _{i,j}=[i=j] $ , and $ \| \cdot \| $ means to take the determinant of the enclosed matrix. }
+$$
+\end { theorem }
+
+Here is only one feature is $ 0 $ domain $ K $ a $ H \ in K [[ \ mathbf X]] $ proof when, still referring to generic proof \ auf cite [Sec. 1.2] { combenum }.
+
+\begin { proof }
+Just prove that $ H = \mathbf {x^m} $ can be deduced and its linear combination, that is, just prove
+$$
+[ \mathbf x^{ \mathbf k}] \mathbf {F^m} = [ \mathbf x^{ \mathbf k}] \mathbf {x^m} \mathbf G^{ \mathbf k} \left  \| 
+\delta _{i,j}- \frac {x_j}{G_i( \mathbf x)} \frac { \partial G_i ( \mathbf x)}{ \partial x_j}
+\right  \|
+$$
+Think of it as EGF, the left side of the equation is described $ m_i $ particles with the first $ I $ species as a root node of a forest of trees rooted, and the first $ I $ seed node total $ K_i $ a. Looking at the right side, the intent of $ \mathbf {x^m} \mathbf G^{ \mathbf k} $ is nothing more than shilling each node to choose its children set, and this will lead to some shapes like \ref { figcyc } Is counted and entered, the ring should be enumerated for inclusion and exclusion.
+\begin { figure }[htbp]
+\centering
+\begin { tikzpicture }[>=latex', scale=0.8]
+  \tikzstyle {n} = [draw,shape=circle,minimum size=2em,
+                      inner sep=0pt,fill=white!20]
+% %
+  \node (1) at (123.49bp,103.74bp) [n] { $ 1 $ };
+  \node (2) at (123.49bp,207.94bp) [n] { $ 2 $ };
+  \node (3) at (213.73bp,155.84bp) [n] { $ 3 $ };
+  \node (4) at (73.993bp,18.0bp) [n] { $ 4 $ };
+  \node (5) at (133.29bp,313.7bp) [n] { $ 5 $ };
+  \node (6) at (27.0bp,252.33bp) [n] { $ 6 $ };
+  \node (7) at (312.73bp,155.84bp) [n] { $ 7 $ };
+  \draw [->, red, thick] (1) - (2);
+  \draw [->, red, thick] (2) - (3);
+  \draw [->, red, thick] (3) - (1);
+  \draw [->] (1) - (4);
+  \draw [->] (2) - (5);
+  \draw [->] (2) - (6);
+  \draw [->] (3) - (7);
+% %
+  \begin { pgfonlayer }{background}
+    \draw [rounded corners=2em,line width=3em,green!20,cap=round, draw opacity=0.8]
+      (1.center) - (4.center);
+    \draw [rounded corners=2em,line width=3em,green!20,cap=round, draw opacity=0.8]
+      (1.center) - (2.center);
+    \draw [rounded corners=2em,line width=3em,blue!20,cap=round, draw opacity=0.8]
+      (2.center) - (3.center);
+    \draw [rounded corners=2em,line width=3em,blue!20,cap=round, draw opacity=0.8]
+      (2.center) - (5.center);
+    \draw [rounded corners=2em,line width=3em,blue!20,cap=round, draw opacity=0.8]
+      (2.center) - (6.center);
+    \draw [rounded corners=2em,line width=3em,red!20,cap=round, draw opacity=0.8]
+      (3.center) - (1.center);
+    \draw [rounded corners=2em,line width=3em,red!20,cap=round, draw opacity=0.8]
+      (3.center) - (7.center);
+    \end { pgfonlayer }
+\end { tikzpicture }
+\caption { Forming a ring~example} \label { figcyc }
+\end { figure }
+
+Consider the matrix
+$$
+\mathbf M = \left ( \frac {x_j){G_i( \mathbf x)} \frac { \partial G_i ( \mathbf x)}{ \partial x_j} \right )_{i,j=1}^n
+$$
+Then the original image $ T $ replace a length point $ T $ method loops will be $ \ OperatorName {TR} \ mathbf M ^ T $ statistical $ T $ times, generates an alternative for a single ring Function by
+$$
+C = \sum _{t \ge 1} \frac  1 t \operatorname {tr} \mathbf M^t = \operatorname {tr} \left ( \sum _{t \ge 1} \frac  1 t \mathbf M ^t \right ) = \operatorname (tr) \left (- \log ( \mathbf (IM)) \right )
+$$
+Given. Therefore, the generating function for its tolerance is $ \sum _{l \ge 0} \frac {(-C)^l}{l!}= \exp  \left (- \operatorname {tr} \left (- \ log ( \mathbf {IM}) \right ) \right ) = \exp  \left ( \operatorname {tr} \log ( \mathbf {IM}) \right ) $ . There is a relationship between the trace of the matrix and the determinant $ \det  \exp  \mathbf A = \exp  \operatorname {tr} \mathbf A $, Bring in $ \mathbf A = \log ( \mathbf {IM}) $, and the existing tolerance factor is $ | \mathbf {IM}| $ , so the proposition is proved.
+\end { proof }
+
+\begin { problem }[matrix tree \footnote {source: simulation game problem ordered by myself}]
+There is a graph with a total of $ n_ 1 + \dots +n_k $ nodes, we call it the first $ 1 , 2 , \dots ,k $ part in turn. For all point pairs from part $ i $ to part $ j $ , there are $ a_{i,j} $ edges between them. The number of spanning trees in the output of this picture is congruent $ 998244353 $ . Guaranteed $ 1 \le n \le  10 ^ 8 , 1 \le k \le  300 , 0 \le a_{i,j}=a_{j,i}\le  1 $ .
+\end { problem }
+
+\begin { solution }
+Let us consider first writing a generating function equation system to describe this problem. Let $ T_i( \mathbf x)=T_i(x_ 1 , \dots ,x_k) $ denote the generation with a node of color $ i $ as the root The EGF of the number of tree schemes (divided by $ n_ 1 ! \Dots n_k! $ ) then the equation
+$$
+T_i( \mathbf x)=x_i \exp  \left ( \sum _j a_{i,j) T_j( \mathbf x) \right )
+$$
+Then what we require is $ \frac  1 {n_1} \left [ \frac {x_1^{n_1}}{n_1!} \dots\frac {x_k^{n_k}}{n_k!} \right ] T_ 1 ( \mathbf x) $ , according to the multivariate Lagrange inversion, the answer is converted to
+\begin { align* }
+& \quad\frac 1{n_1} \left [ \frac {x_1^{n_1}}{n_1!} \dots\frac {x_k^{n_k}}{n_k!} \right ] T_1( \mathbf x) \ \
+&= \frac 1{n_1} \left [ \frac {x_1^{n_1}}{n_1!} \dots\frac {x_k^{n_k}}{n_k!} \right ] x_1 \exp\left ( \sum _{i,j} n_ia_{i,j}x_j \right ) \left  \|  \delta _{i,j}-a_{i,j}x_j \right \| \\
+&= \left [ \frac {x_1^{n_1-1}}{(n_1-1)!} \frac {x_2^{n_2}}{n_2!} \dots\frac {x_k^{n_k}}{n_k !} \right ] \exp\left ( \sum _{i,j} n_ia_{i,j}x_j \right ) \left  \|  \delta _{i,j}-a_{i,j}x_j \right \|
+\end { align* }
+
+Note that at this time the determinant of $ J $ column only and $ x_j $ , and therefore determinant when we count apparently confirming the first $ J $ column of finding out when you get $ x_j $ coefficient power part of the time, Suppose $ d_j = \sum _i n_ia_{i,j} $ , then for $ j \ge  2 $ , we can directly replace the $ (i,j) $ item of the matrix with $ \left [ \frac {x_j^ {n_j}}{n_j!} \right ] \exp (d_jx_j)( \delta _{i,j} -a_ {i,j}x_j) = \delta_{i,j} d_j^{n_j}-a_{i,j} n_j d_j^{n_j-1} $ ; For $ j = 1 $ , replace with $ \left [ \frac {x_1^{n_1-1 }){(n_1-1)!} \right ] \exp (d_ 1 x_ 1 )( \delta _{i,1}-a_{i,1}x_ 1 ) = \delta _{i,1} d_ . 1 ^ {n_1-1} - I A_ {,}. 1 (of N_ . 1 - . 1 ) D_ . 1 ^ {n_1-2} $ . \footnote {Since the exponent is derived from the coefficient extraction of $ \exp $ , here $ b< 0 $There should be $ a^b = 0 $ . }So we can directly calculate the determinant of this matrix to get the answer.
+\end { solution }
+
+\section { Set power series }
+
+\begin { definition }[set definition of set power series]
+Let $ I = 2 ^{ \{ 1, \dots ,n \} } \cup \{ 0 \} $ , for $ S,T \in  \IZ $ , remember the set \emph { no intersection } $ S \sqcup T $ is:
+$$
+S \sqcup T = \begin {cases}
+S \cup T & S \cap T = \varnothing \\
+0 & \mathrm {else}
+\end {cases}
+$$
+
+It is easy to see that the generating function defined on $ (I, \sqcup ) $ is a classic set power series.
+\end { definition }
+
+But here we give a different discussion method to define the set power series, which can more easily describe its algebraic properties.
+
+\begin { definition }[Multivariate power series definition of set power series]
+We call $ \A [x_ 1 , \dots ,x_n]/(x_ 1 ^{2}, \dots ,x_n^{2}) $ to be the power series of $ n $ elements. Also note it as $ \A\{ x_ 1 , \dots ,x_n \} $ .
+\end { definition }
+
+It can be seen that the ensemble power series is nothing more than the most extreme case in the multivariate power series.
+
+\subsection { convolution }
+
+\begin { theorem } \label { cupconv }
+When $ \A $ takes any ring, the complexity of calculating the convolution of the set power series can be $ \Theta (n^ 22 ^n) $ .
+\end { theorem }
+
+We can copy the calculation method of high-dimensional sequence convolution. Since each dimension is extremely small, the complexity of the interpolation conversion is consistent with the general method of high-dimensional convolution, and it has a smaller constant. Note that there are always $ 0 , 1 $ on any ring , so we can directly select $ \alpha ^{(i)}_ 0 = 0 , \alpha ^{(i)}_ 1 = 1 $ for interpolation conversion . In fact, this is the expression of the classic fast M \" obius transform and placeholder polynomial: treat it as a set and convolve and use the set size for placeholder.
+
+\begin { theorem }
+The complexity of calculating the ensemble power series \emph { online convolution } can be done as $ \Theta (n^ 22 ^n) $ .
+\end { theorem }
+
+This algorithm first appeared in \cite { walk }. We set the priority of the online algorithm as $ \delta (S) = |S| $ , we only need to make $ k $ from small to large, when processing all the coefficients of $ |S|=k $ , corresponding to $ |S|= 0 , \dots ,k- 1 $ part of the placeholder polynomial has been calculated, you can calculate the placeholder polynomial multiplication at the position of $ t^k $ within $ \Theta (k 2 ^n) $ , and then pass $ \Theta (n 2 ^n) $ time only performs M on the part of $ t^k $ \"Inverse obius transform to get all coefficients. After getting it, use $ \Theta (n 2 ^n) $ time to perform M \" obius transformation on the $ t^k $ part . Therefore, the complexity of the entire algorithm is $ \Theta (n^ 22 ^n) $ .
+
+For semi-online ensemble power convolutions that are not constrained by the order of operations, the above algorithm is sufficient. In \cite { nimberpoly }, it is called \emph { semi-semi-online } convolution. In contrast, \emph { full semi-online } convolution needs to ensure that the value of each item is calculated from small to large according to the binary number represented by the set. Later we will see that this can be used to solve the differential equation of the exponential generating function on the ring with the characteristic $ 2 $ .
+
+\begin { theorem }
+Full semi-online ensemble power convolution can be completed in $ \Theta (n^ 22 ^n) $ time.
+\end { theorem }
+
+The process of this algorithm needs to transform the occupying polynomial into an interpolation form. We take $ k $ interpolation points, then the multiplication after the interpolation conversion can be completed in $ \Theta (k 2 ^n) $ . We consider dividing and conquering from the highest bit. Since each bit of the M \" obius transformation can be completed within $ \Theta (k 2 ^n) $ , we only transform the highest bit each time during the divide and conquer process. That is, the specific process can be referred to the following pseudo code.
+
+\begin { breakablealgorithm }
+  \caption {Fully Relaxed Subset Convolution}
+  \begin { algorithmic }[1]
+    \REQUIRE A number $ n $ , an array $ g[ 1 \dots  2 ^n- 1 ] $ , relaxing function $ \phi $ will modify $ f[i] $ when calling $ \phi (i) $
+    \ENSURE Evaluate $ f[i] $ and call $ \phi (i) $ in the order $ i = 0 \dots  2 ^n- 1 $
+   
+    \STATE Find $ k $ elements $ a_ 1 , \dots ,a_k \in  \A $ such that $ \forall i \neq j $ , $ a_i-a_j $ is invertible
+    \STATE Let $ \mathbf A = (a_i^j)_{i,j=0}^{k-1} $ and precalculate $ \mathbf A^{-1} $
+    \STATE Initialize $ \mathbf F[ 0 \dots  2 ^n- 1 ] $ with $ \mathbf  0 $
+    \FOR { $ i = 0 \dots  2 ^n- 1 $ }
+      \STATE Let $ b = \operatorname { \mathbf {popcount}}(i) $
+      \STATE  $ \mathbf G[i] \leftarrow (g[i] \mathbf A)_b $
+    \ENDFOR
+    \FOR { $ i = 0 \dots n- 1 $ }
+      \STATE Do M \" obius transform on $ \mathbf G[ 2 ^i \dots  2 ^{i+1}- 1 ] $
+    \ENDFOR
+    \STATE  \textbf { function } DivideConquer( $ l, t $ ) \COMMENT {solve $ [l, l+ 2 ^t) $ }
+    \begin {ALC@g} % The indentation command is forcibly called because noithesis.cls directly quotes algorithms, and other libraries with functions cannot be used due to conflicts
+    \IF { $ t = 0 $ }
+      \STATE Let $ b = \operatorname { \mathbf {popcount}}(l) $
+      \STATE  $ f[l] \leftarrow ( \mathbf F[l] \mathbf A^{-1})_b $ 
+      \STATE  $ \phi (l) $
+      \STATE  $ \mathbf F[l] \leftarrow (f[l] \mathbf A)_b $
+    \ELSE
+      \FOR { $ i = l \dots l + 2 ^{t-1}- 1 $ }
+        \STATE  $ \mathbf F[i + 2 ^{t-1}] \leftarrow  \mathbf F[i + 2 ^{t-1}]- \mathbf F[i] $
+      \ENDFOR
+      \STATE DivideConquer( $ l, t- 1 $ )
+      \FOR { $ i = l \dots l + 2 ^{t-1}- 1 $ }
+        \STATE  $ \mathbf F[i + 2 ^{t-1}] \leftarrow  \mathbf F[i + 2 ^{t-1}] + \mathbf F[i] \cdot  \mathbf G[i + 2 ^ {t-1}] $
+      \ENDFOR
+      \STATE DivideConquer( $ l+ 2 ^{t-1}, t- 1 $ )
+      \FOR { $ i = l \dots l + 2 ^{t-1}- 1 $ }
+        \STATE  $ \mathbf F[i + 2 ^{t-1}] \leftarrow  \mathbf F[i + 2 ^{t-1}] + \mathbf F[i] $
+      \ENDFOR
+    \ENDIF
+    \end {ALC@g}
+    \STATE  \textbf { end function }
+    \STATE DivideConquer( $ 0 , n $ )
+  \end { algorithmic }
+\end { breakablealgorithm }
+
+The overall complexity is $ T(n)= 2 T(n- 1 )+ \Theta (k 2 ^n)= \Theta (kn 2 ^n) $ . Since the highest degree of the polynomial obtained in the process is $ 2 n- 1 $ , it is sufficient to take $ k = 2 n $ . If the unit root can be taken for circular convolution, then taking $ k \ge n $ is sufficient.
+
+\subsubsection { Formal power conversion }
+
+The formal power conversion of the set power is inherited from the algorithm used in the theorem \ref { cupconv }, and its idea has been formed since the introduction of \cite { vfk }. Contrary to the general high-dimensional convolution, the multiplication on the occupying polynomial adopted after the interpolation transformation does not adopt circular convolution, so the value obtained after multiple transformations will not be contaminated. Therefore, if there is a series of calculations in the calculation process of the ensemble power series, the calculation can always be performed in the state of interpolation conversion. In the following we will see that this feature can sometimes optimize the theoretical complexity, and in practical applications, it can also effectively reduce the constant of the algorithm.
+
+\subsection { Point by point Newton iteration method }
+
+Considering that in order to calculate a certain set power $ F $ , we decompose it into calculating $ \frac { \partial }{ \partial x_n} F $ and $ \left . F \right |_{x_n=0} $ . At this time, the former is equivalent to the $ [x_n^ 1 ] $ part, and the latter is equivalent to the $ [x_n^ 0 ] $ part.
+
+If we identified $ [x_n ^ 0 ] $ then it is possible by $ \ Theta (F (n-)) $ time calculated $ [x_n ^ . 1 ] $ , then the overall complexity is $ \ Theta (F (n-) ) $ . (Obviously $ f(n) = \Omega ( 2 ^n) $ )
+
+We call this method \emph { point-by-point Newton iteration method } on the set power .
+
+\begin { problem }[count of unrooted trees]
+Given a symmetric matrix $ \mathbf G $ , for each non-empty subset $ S $ , sum
+$$
+\sum _T \prod _{(i, j) \in T} \mathbf G_{ij}
+$$
+
+Among them, $ T $ enumerates all spanning trees with $ S $ as the point set.
+\end { problem }
+
+\begin { solution }
+We might as well consider only the $ n $ point, first calculate all the $ S \not  \ni n $ situation, that is, $ [x_n^ 0 ]F $ , for the $ [x_n^ 1 ]F $ part, remove $ n The parts after the dot of $ are trees with a root selected. For a subset of $ T $ , if its self-contained communication block, which optionally may be a root node, so we will $ [X ^ T] [x_n ^ 0 ] F $ multiplied by $ \ SUM _ {J \in T} \mathbf G_{jn} $ get $ \widehat F$ , Then there is
+$$
+[x_n^ 1 ]F = \exp  \widehat F
+$$
+
+The set power series $ \exp $ can be calculated in $ \Theta (n^ 22 ^n) $ , so the complexity of the problem is $ \Theta (n^ 22 ^n) $ .
+\end { solution }
+
+\subsubsection { composite }
+
+\begin { definition } [composition of set power series]
+Gives $ \ A $ on $ n- $ times \ emph { exponential function generating } form polynomial $ F. = \ SUM _ ^ {K} = 0 n-F_k \ FRAC {X} ^ {K K!} $ , And not Set power series with constant items $ G \in  \A\{ x_ 1 , \dots , x_n \} $ . Record its compound as
+$$
+F \circ G = \sum _{k=0}^n f_k \frac {G^k}{k!}
+$$
+
+Note that when $ G $ does not contain a constant term, $ \frac {G^k}{k!} $ is always well-defined. Because take any $ K $ nonempty disjoint set $ of S_ . 1 , \ DOTS S_k $ , denoted $ \ bigsqcup _ ^ {K}. 1 J = S_j = S $ , this time $ of S_ . 1 , \ DOTS S_k $ a $ k! $ permutations all contribute to the coefficient of the $ x^S $ term. Therefore, we might as well directly define $ [x^S] \frac {G^k}{k!} $ as for all $ S$ Is divided into $ k $ unordered non-empty sets $ S_ 1 , \dots S_k $ plan, for $ \prod _{i=1}^k [x^{S_i}]G $ sum.
+\end { definition }
+
+\begin { theorem } \label { setcomp }
+The composition of the set power series can be calculated in $ \Theta (n^ 22 ^n) $ time.
+\end { theorem }
+
+Consider $ \frac { \partial }{ \partial x_n} (F \circ G) = F'(G) \frac { \partial }{ \partial x_n} G $ , so we reduce it to $ n- 1 $ Scale sub-problem, but to calculate the composite result of $ F $ and $ F' $ .
+
+Remember that $ G_k $ is $ \left . G \right |_{x_n = \dots x_{n-k+1}=0} $ , we can conclude that for $ 0 \le k \le n $ , we need to solve $ F, F', \dots , F^{(k)} $ Compound $ G_k $ These are $ k + 1 $ complex problems with a scale of $ nk $ . The specific process is given by the following pseudo code:
+
+\begin { breakablealgorithm }
+  \caption {EGF Composite Set Power Series}
+  \begin { algorithmic }[1]
+    \REQUIRE A number $ n $ , EGF $ F(x) = \sum _{k=0}^n f_n \frac {x^n}{n!} $ , sequence $ g[ 0 \dots  2 ^n- 1 ] $ denoting the set power serie
+
+    \FOR { $ i = 0 \dots n $ }
+      \STATE Let $ h_{0,i} = [f_i] $
+    \ENDFOR
+    \FOR { $ k = 1 \dots n $ }
+      \FOR { $ j = 0 \dots nk $ }
+        \STATE Let $ h_{k,j}[ 0 \dots  2 ^{k-1}- 1 ] = h_{k-1,j} $
+        \STATE Let $ h_{k,j}[ 2 ^{k-1} \dots  2 ^k- 1 ] = h_{k-1,j+1} * g[ 2 ^{k-1} \dots  2 ^k- 1 ] $
+      \ENDFOR
+    \ENDFOR
+    \RETURN  $ h_{n,0}[ 0 \dots  2 ^n- 1 ] $
+  \end { algorithmic }
+\end { breakablealgorithm }
+
+The bottleneck is that for each $ k $ , we carry out $ nk $ times $ k $ element set power series multiplication, and its complexity can be calculated by the sum $ \Theta  \left ( \sum _{k=0}^nk^ 2  2 ^k (nk) \right ) $ means. The following prove that its complexity is $ \Theta (n^ 2  2 ^n) $ .
+
+\begin { proof }
+After calculation, we can get:
+$$
+\sum _{k=0)^nk^ 2  2 ^k (nk) = 2 (- 13 + 13 \cdot  2 ^n- 3 n- 6 \cdot  2 ^n n+ 2 ^nn^ 2 )
+$$
+
+Therefore, the complexity of the algorithm is $ \Theta (n^ 2  2 ^n) $ .
+\end { proof }
+
+In fact, this method has excellent constants. For the set power $ \exp $ , because $ F'=F $ , we can reduce some maintenance in the iterative process. This method is more constant than the $ 2 ^n $ subdifferential equation to achieve $ \Theta (n ^ 2 ) The method of $ form power $ \exp $ is more efficient. Practice has shown that in some of the problems of designing algorithms based on $ F $ , if the method is a little more complicated, the general method will also have significantly better constants \footnote {e.g. set division count, \url {https://loj .ac/p/154}}.
+
+\begin { lemma }
+In the case of interpolation and transformation, the composite power series can be calculated by $ \Theta ( 2 ^n \Mul (n)) $ .
+\end { lemma }
+
+In order to achieve this theoretical complexity, the main step is to finely process the steps of the previous algorithm. First of all, we don’t need to get $ G_k $ , but only need to get the result of an interpolation transformation of $ G_k $ . We first de-interpolate $ G $ in the dimension of $ x_n $ . This only requires $ \Theta (n 2 ^n ) $ Complexity, we get the interpolation results of $ \frac { \partial }{ \partial x_n} G $ and $ G_ 0 $ . Continue recursively on $ G_ 0 $ to get all the interpolation results of $ G_k $ . The complexity is $ \sum_{k=1}^nk 2 ^k = \Theta (n 2 ^n) $ . Conversely, the calculation bottleneck of all sub-problems is also polynomial multiplication, so the complexity is $ \sum _{k=0}^n \Mul (k) 2 ^k(nk) = \Theta ( 2 ^n \Mul ( n)) $ .
+
+\subsubsection { Tutte polynomial }
+
+\begin { definition }
+For an undirected graph $ G = (V, E) $ , define its \emph { Tutte polynomial } as
+$$ T_G(x,y) = \sum _{A \subseteq E}(x- 1 )^{k(A)-k(E)}(y- 1 )^(k(A)+|A| -|V|} $$
+
+Among them, $ k(E) $ represents the number of connected components of the graph $ (V, E) $ .
+\end { definition }
+
+The next few pieces of information show the connection between Tutte polynomials and several classic counting problems on graphs. Due to space limitations, the following lemmas are only stated but not proved. The proof can be found in \cite [X.4]{ graph }
+
+\begin { definition }[chromatic polynomial]
+For an undirected graph $ G = (V, E) $ , there exists a polynomial $ P_G (K) $ such into positive integer $ K $ time, $ P_G (K) $ value represents $ G $ a $ K $ - staining plan.
+\end { definition }
+
+\begin { lemma }
+The chromatic polynomial can be expressed as Tutte polynomial:
+$$ P_G(c)=(- 1 )^{|V|-k(E)}c^{k(E)}T_G( 1 -c, 0 ) $$
+\end { lemma }
+
+\begin { lemma }
+For an undirected graph $ G = (V, E) $ , the following formula
+$$ (- 1 )^{|V|}P_G(- 1 )=T_G( 2 , 0 ) $$
+
+It is the number of \emph { acyclic orientation } of $ G $ , that is, the number of plans for each edge to be oriented so that the graph is a directed acyclic graph.
+\end { lemma }
+
+\begin { lemma }
+For an undirected graph $ G = (V, E) $ , $ T_G( 0 , 2 ) $ is the number of \emph { strongly connected orientations } of $ G $ , that is, each edge is oriented so that the graph is strongly connected picture.
+\end { lemma }
+
+It can be seen from the above lemma that Tutte polynomials unify several classic graph theory counting problems. As long as the calculation of Tutte polynomials is solved, the above problems can be solved together.
+
+\begin { theorem }
+Provided $ n-= | G | $ , into a set of $ X, Y $ , for $ V $ entire subset $ V ' $ , provided that induced subgraph \ footnote {leaving only the two end points are in the $ V' $ The edge in} is $ G'=(V',E') $ , $ T_{G'}(x,y) $ can be calculated in a total of $ \Theta (n^ 2  2 ^n) $ .
+\end { theorem }
+
+Note that the exponent is always non-negative, so the calculation can circumvent the division. Next, an algorithm that can be performed on any ring $ \A $ is introduced.
+
+It is easy to see that if $ G' $ has multiple connected components, then $ T_{G'} $ is equal to the product of the Tutte polynomials of each connected component. It is better to find the answer when all $ G' $ is a connected graph, and the rest is The product of the callable sub-problems. First consider the connected components of $ G' $ when $ A $ is used as the edge set . For the connected component $ S $ , we set the edge set in $ A $ in the component to be $ B $ , and its weight is
+$$
+f_S(B)=(y- 1 )^{|B|-(|S|-1)}
+$$
+It is not difficult to find that according to this definition, $ (x- 1 )^{k(A)-k(E)}(y- 1 )^{k(A)+|A|-|V|} $ is each The product of the connected components $ f $ is multiplied by $ (x- 1 )^{t-1} $ , where $ t $ is the number of connected components. Therefore, if the sum of the values of $ f $ of the entire scheme $ B $ that makes $ S $ the connected component obtains $ g_S $ , the value of the Tutte polynomial can be expressed as
+$$
+[X^{V'}] \sum _{t \ge 1} (x- 1 )^{t-1} \frac { \left ( \sum _{S \neq  \varnothing } g_S X^S \right )^t}{t!}
+$$
+This can be solved directly by calling the algorithm of the theorem \ref { setcomp }. Next, just consider how to calculate $ g_S $ .
+
+Considering Newton iterative calculation point by point $ G $ , for $ S \ Ni n- $ , consider deleting $ n- $ after $ S $ respective communication nodes constituting the remaining components, each connected component is connected to at least one $ n- $ of If the edges are in $ B $ , if there are a total of $ m $ edges connected to $ n $ , then there are $ y^m- 1 $ schemes. Therefore, all $ S \ Not \ Ni n- $ a $ G_S $ multiplied by the respective corresponding $ Y ^ M- After 1 $ , the generating function is set to exponentiation $ \exp $ , and the value of each $ S \cup  \{ n \} $ is obtained.
+
+In summary, the time complexity of the algorithm is $ \Theta (n^ 22 ^n) $ .
+
+\subsection { Composite equation }
+
+Since the ensemble power series is a special multivariate power series, we can copy the tree compound equation defined in the multivariate power series and the multivariate Lagrange inversion. From this we can calculate one term in the tree-shaped compound equation of the set power in $ \tilde O( 2 ^n) $ time. Below we write down $ f^S = \prod _{i \in S} f_i $ .
+
+\begin { theorem }
+  For a $ \ mathbf G $ tree composite equation defined $ \ mathbf F. $ , May be in the $ O (n- \ Alpha ^ n- \ R & lt (n-)) $ calculated time $ \ mathbf F. $ All coefficients, wherein $ \alpha = \frac {3+ \sqrt 5} 2  \approx  2.618 $ .
+\end { theorem }
+
+We consider designing an algorithm of $ O(n \alpha ^n \Mul (n)) $ complexity to verify the solution, and then just rewrite it as an online algorithm. The core of the problem is nothing more than a special kind of compound: calculating $ P(F_ 1 , \dots ,F_n) $ , where the value items of $ F_i $ all include $ x_i $ .
+
+We consider the point-by-point Newton iteration method, consider $ \frac { \partial }{ \partial x_n} P(F_ 1 , \dots ,F_n) = \sum _{k=1}^n ( \frac { \partial } { \partial x_k} P)(F_ 1 , \dots ,F_n) \cdot  \frac { \partial }{ \partial x_n} F_k $ . Therefore, there are a total of $ \sum _{i \le k} \binom ni $ for sub-problems with the order of $ nk $ scale . And after careful analysis of the problem, it is found that for the sub-problem $( \prod _{i \in S} \frac { \partial }{ \partial x_i}) The compound problem of P $ , where the part of $ i \le nk $ does not need to calculate the coefficient containing $ x_i $ , because $ F_i $ The multiplication of will overflow this part. After this part of the reduction, the sum of our total convolution scale can be expressed as the following sum:
+$$
+T(n)= \sum _{ \substack {i,j,k \\ i+j \le k}} \binom {nk}i \binom {k}j 2 ^{nki}
+$$
+
+Next prove that $ T(n) = \Theta ( \alpha ^n) $ .
+\begin { proof }
+We consider constructing a generating function for the sequence of sums with respect to $ n $ .
+\begin { align* }
+T(n)&= \sum _{ \substack {i,j,k \\ i+j \le k}} ([x^i](2+x)^{nk})([x^j] (1+x)^k) \\
+&= \sum _{i+j+t=k} ([x^i](2+x)^{nk})([x^j](1+x)^k) \left ([x^ t] \frac 1{1-x} \right ) \\
+&= \sum _{k \le n} [x^k] \frac {(2+x)^{nk}(1+x)^k}{1-x} \\
+&= [x^0] \sum _{k \le n} \frac {(2+x)^{nk}(1+x)^k}{x^k(1-x)}
+\end { align* }
+
+Note that when $ k< 0 $ , the extracted coefficient is naturally $ 0 $ , so we might as well rewrite it directly as a sum to negative infinity.
+\begin { align* }
+T(n) &= [x^0] \sum _{k \ge 0} \frac {(2+x)^{k}(1+x)^{nk}}{x^{nk} (1 -x)} \\
+&= [x^n] \frac {(1+x)^n}{1-x} \sum _{k \ge 0} (2+x)^k(1+x)^{-k}x ^k \\
+&= [x^n] \frac {(1+x)^n}{1-x} \frac 1{1- \frac {x(2+x)}{1+x}} \\
+&= [x^n](1+x)^n \frac {1+x}{(1-x)(1-xx^2)}
+\end { align* }
+
+Suppose $ G(x) = \frac {1+x}{(1-x)(1-xx^2)} $ , this sum is nothing more than
+\begin { align* }
+&= \sum _k \binom nk [x^k]G(x) \\
+&= \sum _k \left ([z^n] \frac {z^k}{(1-z)^{k+1}} \right ) [x^k]G(x) \\
+&= [z^n] \frac 1{1-z} G \left ( \frac z{1-z} \right ) \\
+&= [z^n] \frac {1-z}{(1-2z)(1-3z+z^2)}
+\end { align* }
+
+It can be seen that $ \sum _{n \ge 0} T(n)z^n = \frac {1-z}{(1-2z)(1-3z+z^2)} $ , factorization available $ ( . 1 - 2 Z) ( . 1 - . 3 Z + Z ^ 2 ) = ( . 1 - \ Alpha Z) ( . 1 - \ Beta Z) ( . 1 - \ Gamma Z) $ , where
+$$
+\alpha , \beta , \gamma = \frac {3 \pm  \sqrt 5} 2 , 2
+$$
+The generating function written is already a reduced fraction. It can be seen that there are \emph { non-zero } constants $ a, b, c $ such that $ T(n) = a \alpha ^n + b \beta ^n + c \ gamma ^n $ , so the growth of $ T(n) $ is controlled by the largest root, that is, $ T(n) \sim a \alpha ^n $ . Therefore $ T(n) = \Theta ( \alpha ^n) $ .
+\end { proof }
+
+If all the coefficients are not required, by multivariate Lagrange inversion, we can give $ \tilde O( 2 ^n) $ \footnote { $ T(n) = \tilde O(f(n)) $ means there is a constant $ k $ makes $ T(n) = O(f(n) \log ^kf(n)) $ }.
+
+\begin { theorem } \label { algocomp }
+For a $ \ mathbf G $ tree composite equation defined $ \ mathbf F. $ , Through $ \ tilde are O ( 2 ^ n-) $ pretreatment given $ H \ in  \ A \ { X_ . 1 , \ DOTS , x_n \} $ Inquiry $ [x^S] H( \mathbf F) $ can be completed within $ \Theta (|S|^ 22 ^{|S|}) $ .
+\end { theorem }
+
+It can be seen that the algorithm in general is still bloated, but for some special cases, we can achieve better complexity.
+
+\subsubsection { Symmetric compound equation }
+
+\begin { definition }[Symmetric compound equation]
+There is a set power series $ \mathscr B $ whose value items all satisfy the degree $ \ge  2 $ , and a family of exponential generating functions $ g_ 1 , \dots ,g_n $ make
+$$
+G_i=g_i' \circ  \frac { \partial }{ \partial x_i} \mathscr B
+$$
+At the time, it is said that the tree-shaped compound equation defined by $ \mathbf G $ is \emph { symmetric }.
+\end { definition }
+
+\begin { lemma }
+For the above symmetric compound equation $ \mathbf F $ , there exists a set power series $ \mathscr C $ such that
+$$
+\left . g_i \circ  \left ( \frac { \partial }{ \partial x_i} \mathscr B \right ) \circ  \mathbf F \right |_{x_i=0} = \frac { \partial }{ \partial x_i} \mathscr C
+$$
+\end { lemma }
+
+In fact, the above lemma has a strong combinatorial intuition. Let us explain the meaning of $ \mathscr B $ and $ \mathscr C $ .
+
+The composition of $ \mathscr C $ is equivalent to performing statistics on all circular square trees. Among them, for $ [x^S] \mathscr C $ , $ S $ describes the point set of the circular square tree, and $ g_i $ is theweight assigned to the degree of the point $ i $ , and $ [x^ S] \mathscr B $ describes theweight assigned when theset of adjacent points of a square point is $ S $ .
+
+As shown in the figure \ref { figsym } is one of the extraction coefficients $ [x^{ \{ 1,2,3,4,5,6 \} }] \mathscr C $ , and its contribution is $ ([x ^{ \{ 1,2,3 \} }] \mathscr B) \cdot ([x^{ \{ 2,4 \} }] \mathscr B) \cdot ([x^{ \{ 2,5, 6 \} }] \mathscr B) \cdot ([ \frac {x^3}{3!}]g_ 2 ) \cdot  \prod _{i \in  \{1,3,4,5,6 \} }([ \frac {x^1}{1!}]g_i) $ .
+
+\begin { figure }[htbp]
+\centering
+\begin { tikzpicture }[>=latex', scale=0.8]
+    % set node style
+    \tikzstyle {cir} = [draw,shape=circle,minimum size=2em,
+                        inner sep=0pt,fill=white!20]
+    \tikzstyle {blo} = [draw,shape=rectangle,minimum size=2em,
+                        inner sep=0pt,fill=white!20,rounded corners]
+% %
+    \node (A) at (165.09bp,230.76bp) [blo] { $ A $ };
+    \node (1) at (105.97bp,284.26bp) [cir] { $ 1 $ };
+    \node (2) at (167.23bp,147.3bp) [cir] { $ 2 $ };
+    \node (3) at (216.36bp,291.6bp) [cir] { $ 3 $ };
+    \node (B) at (94.516bp,109.79bp) [blo] { $ B $ };
+    \node (4) at (27.0bp,74.756bp) [cir] { $ 4 $ };
+    \node (C) at (234.03bp,97.214bp) [blo] { $ C $ };
+    \node (5) at (313.33bp,103.55bp) [cir] { $ 5 $ };
+    \node (6) at (243.22bp,18.0bp) [cir] { $ 6 $ };
+    \draw [] (A) - (1);
+    \draw [] (A) - (2);
+    \draw [] (A) - (3);
+    \draw [] (B) - (2);
+    \draw [] (B) - (4);
+    \draw [] (C) - (2);
+    \draw [] (C) - (5);
+    \draw [] (C) - (6);
+%
+    \node [left=0.5em] at (2.west) (c2) { $ [ \frac {x^3}{3!}]g_ 2 $ };
+    \node [left=0.5em] at (A.west) (cA) { $ [x^{ \{ 1,2,3 \} }] \mathscr B $ };
+    \node [left=0.5em] at (B.west) (cB) { $ [x^{ \{ 2,4 \} }] \mathscr B $ };
+    \node [left=0.5em] at (C.west) (cC) { $ [x^{ \{ 2,5,6 \} }] \mathscr B $ };
+    \begin { pgfonlayer }{background}
+      \tikzstyle {e} = [rounded corners=2em,line width=3mm,cap=round, draw opacity=0.8]
+      \fill [e,green!20] (1.center) - (2.center) - (3.center) - cycle;
+      \fill [e,blue!20] (2.center) - (B.west) - (4.center) - (B.east) - cycle;
+      \fill [e,red!20] (2.center) - (5.center) - (6.center) - cycle;
+    \end { pgfonlayer }
+\end { tikzpicture }
+\caption {Symmetric compound equation~example} \label { figsym }
+\end { figure }
+
+\begin { theorem } \label { algosymmcomp }
+After $ g_i $ is given , the calculation of $ \mathscr C $ by $ \mathscr B $ can complete the calculation within $ \Theta (n 2 ^n \Mul (n)) $ .
+\end { theorem }
+
+This algorithm was first proposed by \cite { b2c }. First consider a simple situation, that is, $ g_i = x $ , at this time, there should be $ \mathscr C = \mathscr B $ , because a square tree at this time each dot is a leaf. And if $ g_ 1 $ is general, it means that there can be multiple square points adjacent to the $ 1 $ node. At this time, $ \frac { \partial }{ \partial x_1} \mathscr C = g_ 1  \circ  \frac { \partial }{ \partial x_1} \mathscr B $ and the rest remain unchanged.
+
+We consider a set of transformations $ \mathscr B = \mathscr T_ 0  \rightarrow  \mathscr T_ 1 \rightarrow  \dots  \rightarrow  \mathscr T_n = \mathscr C $ . The intention in the process is to change $ g_i $ from all to $ x $ to input one by one. Therefore, the $ i $ step transformation will be based on $ g_i $ to combine the adjacent square points of the $ i $ point, there is
+\begin { align* }
+\frac { \partial }{ \partial x_i} \mathscr T_{i} &= g_i \circ  \frac { \partial }{ \partial x_i} \mathscr T_{i-1} \\
+\left . \mathscr T_i \right |_{x_i=0} &= \left . \mathscr T_{i-1} \right |_{x_i=0}
+\end { align* }
+At this time, the complexity of $ \Theta (n^ 32 ^n) $ is already obvious, and notice that the intermediate transformation we can always calculate under the result of the interpolation transformation. When performing the $ i $ transformation, we Only need to restore the $ i $ dimension, and restore one dimension only $ \Theta (n 2 ^n) $ , so the bottleneck is the composite problem of the set power series under interpolation transformation for $ n $ times. The total complexity is $ n \cdot  \Theta ( 2 ^n \Mul (n)) = \Theta (n 2 ^n \Mul (n)) $ .
+
+Although in practice $ \Mul (n) $ is only necessary to be implemented as $ \Theta (n^ 2 ) $ , reducing the number of M \" obius transformations can effectively reduce the constant of the algorithm.
+
+\begin { lemma }
+For $ V $ of each subset $ V ' $ by double the number of communication sub-graph may be induced subgraph in $ \ Theta (n- 2 ^ n- \ adder Mul (n-)) $ calculation time.
+\end { lemma }
+
+The algorithm described in the theorem \ref { algosymmcomp } was originally proposed to solve this problem. This situation is named \emph { connected-point bi-connected transformation }. Note that if $ \mathscr B $ is the set power series of the point bi-connected subgraph, then when $ g_i = \exp x $ , $ \mathscr C $ is the set power series of the connected graph. Noting Theorem \ REF { algosymmcomp } conversion if every step of the described transform inverse transform exists, then by $ \ mathscr C $ gradually reduced to give $ \ mathscr B $ , where there
+\begin { align* }
+\frac { \partial }{ \partial x_i} \mathscr T_{i-1} &= \ln  \circ  \frac { \partial }{ \partial x_i} \mathscr T_i \\
+\left . \mathscr T_{i-1} \right |_{x_i=0} &= \left . \mathscr T_i \right |_{x_i=0}
+\end { align* }
+The complexity is $ \Theta (n 2 ^n \Mul (n)) $ .
+
+\begin { problem }[count cactus \footnote {source: enhanced from Ildar Gainullin, \url {https://loj.ac/p/6719}}]
+Given an undirected simple graph $ G=(V,E) $ , ask how many subsets of edge sets make the graph connected, and each edge is at most in a simple ring. The answer is the same as $ 998244353 $ , guarantee $ n \le  18 $ .
+\end { problem }
+
+\begin { solution }
+Considering the structure of bi-connected components at each point of such a graph, it must be an edge or a loop. Through the state compression DP, it is not difficult to calculate the number of loops on all point sets $ S $ with $ k $ as the point with the largest number in the time of $ \Theta (k^ 22 ^k) $ . From this, we can get the set power series $ \mathscr B $ of all double connected components of the points that meet the conditions , and then take $ g_i = \exp x $ to get $ \mathscr C $ is the set power series of the cactus. The complexity bottleneck is the double connected-connected transformation of computing points.
+\end { solution }
+
+It is worth mentioning that this question also has some methods that are similar to the theorem \ref { algocomp } in the algorithm. The complexity of the above method in practice is $ \Theta (n^ 32 ^n) $ , but The above-mentioned solution by calling the general method shows better constants instead.
+
+\section { Exponential generating function }
+
+If $ 1 \sim n $ is homomorphically invertible on the calculated ring, then the exponential generating function has no additional significance for discussion, because we can directly transform the sequence into $ \widehat {f_n} = \frac {f_n}{ n!} $ . But if $ \A $ is a congruence operation $ \mathbb Z/M \mathbb Z $ with a small prime factor , or a finite field whose characteristic is not $ 0 $ and is less than or equal to $ n $ , it cannot be directly divided by $ n! $ for processing. The first thing we need to solve is how to multiply.
+
+\subsection { convolution }
+
+\begin { definition }[binomial convolution]
+For a sequence with $ \mathbb Z_{ \ge 0} $ as the subscript and $ \A $ as the coefficient, we define its convolution $ c = a * b $ :
+$$
+c_k = \sum _{i = 0}^k \binom ki a_i b_{ki}
+$$
+\end { definition }
+
+\begin { theorem }[Four modulus NTT]
+Under the modulo $ M $ operation, there is $ \Theta (n \log n \cdot  \omega (M)) $ \footnote { $ \omega (n) $ refers to the number of mutually heterogeneous factors of $ n $ } of complexity Binomial convolution algorithm.
+\end { theorem }
+
+We consider how to solve the situation when $ M = p^k $ first , and then we can use CRT to merge the situations.
+
+We note $ V_P (n-) $ a $ n-! $ In $ P $ quality factor number, $ P $ - factorial is $ n-_p = P ^ {V_P (n-)}! $ , Anti $ P $ - factorial is $ \overline {n!_p} = \frac {n!}{n!_p} $ .
+
+Then by definition, it is obvious that $ \overline {n!_p} $ is still reversible with congruence $ M $ . We shill $ \widehat a_n = a_n \cdot  \left ( \overline {n!_p} \right )^{-1} \bmod M $ , we can get
+$$
+\widehat c_n \equiv  \sum _k \left ( \frac (n!_p){k!_p (nk)!_p} \right ) \widehat a_k \widehat b_{nk} \equiv  \sum _k p^{v_p( n)-v_p(k)-v_p(nk)} \widehat a_k \widehat b_{nk} \pmod M
+$$
+
+\begin { theorem }[Kummer]
+
+$ V_p (the n-) -v_p (k) -v_p (NK) $ is in $ the p- $ lower band, $ the n- $ minus $ k $ times what happens when abdicated.
+
+\end { theorem }
+
+Since $ n $ has at most $ \log _p n $ reversible in the $ p $ base, we know $ p^d \le n $ according to the above theorem , so we are in the case of \emph { no modulus } , You can get $ \widehat c_n \le n \cdot nM^ 2 = n^ 2 M^ 2 $ .
+
+While $ the p- $ mold $ M $ Irreversible, but when $ the p- \ Le the n- $ , nature meet in our chosen NTT modulus are reversible. Therefore, this convolution formula involving division, because it has been guaranteed that the result is an integer within the range of $ n^ 2 M^ 2 $ , so we only need to select the NTT modulus for convolution, and then use CRT to merge it. Can. Taking $ n \le  10 ^ 6 , M \le  10 ^ 9 $ under normal circumstances, you can get $ c_n \le  10 ^{30} $ , using four NTT modulus to merge is enough. The fly in the ointment at the moment is that the usual $ M $ is at $ 10 ^Within the range of 9 $ , \texttt { int128 }is inevitably used in the final CRT stage of the four-modulus NTT.
+
+Therefore, for each $ M=p^k $ situation, we can calculate by \emph { four modulus NTT }, then for the general $ M $ CRT, the algorithm complexity is $ \Theta (n \ log n \cdot  \omega (M)) $ , or it can be interpreted as the convolution of the result range of $ n^{1+ \omega (M)}M^ 2 $ .
+
+\begin { theorem }
+Modular $ M $ binomial convolution can be performed online within $ \Theta ( \R (n) \cdot  \omega (M)) $ time.
+\end { theorem }
+
+After CRT transformation, we will line two convolution into $ \ Omega (M) $ one easy of $ M = the p-^ k $ in the form of online two convolution. Through the aforementioned four-modulus NTT reduction, we convert the online binomial convolution into four simultaneous online convolutions.
+
+Through this method, we can also complete elementary function composition under binomial arithmetic more efficiently.
+
+\begin { theorem }
+For the polynomial $ F (X) $ and EGF in the form of a polynomial $ G (X) $ , provided $ \ mathrm {D} = \ FRAC { \ mathrm {D}} { \ mathrm {D} X} $ , can $ \Theta (n \log n \cdot  \omega (M)) $ calculates the multiplication of the polynomial by the derivation operator in the time $ g( \mathrm {D}) \cdot f(x) $ .
+\end { theorem }
+
+Just notice that the coefficient of $ f(x) $ is regarded as the input vector $ \mathbf f $ , then this transformation is the \emph { transposition algorithm of "binary convolution of $ f $ and $ g $ " }, we can perform transposition calculation on the process of binomial convolution.
+
+\begin { lemma }
+For the polynomial $ f(x) $ , the coefficients of $ f(x+c) $ congruence $ M $ can be calculated in $ \Theta (n \log n \cdot  \omega (M)) $ time .
+\end { lemma }
+
+Just notice that $ f(x+c) = \mathrm {e}^{c \mathrm {D}} \cdot f(x) $ can be reduced to the above algorithm.
+
+\begin { lemma }
+Given that the point value of the polynomial $ f(x) $ under $ 0 , \dots ,n $ (and exists under congruence $ M $ and is given in this form), it can be written in $ \Theta (n \log n In \cdot  \omega (M)) $ find the value of $ f(m),f(m + 1 ), \dots ,f(m+n) $ under congruence $ M $ .
+\end { lemma }
+
+Consider the binomial inversion $ g_n = \sum _k \binom nkf(k)(- 1 )^(nk) $ and then the descending power expression of $ f $
+$$
+f(x) = \sum _{k \le n} g_k \binom xk
+$$
+
+Therefore, we can first complete the binomial inversion through a binomial convolution, and then the second convolution is a binomial convolution with a different starting point, but because of the number of combinations that appear in it, the maximum superscript is $ n+ m $ , so there is a power of prime factors $ P ^ K \ Le n-m + $ , similar to the range found for conversion is controlled $ n- \ CDOT (n-m +) m ^ 2 Le \ nM ^ . 3 $ within , The conversion of four-modulus NTT is still available.
+
+In fact, we can only perform convolution once. Consider calculating the contribution of the point value $ f(k) $ to $ f(m) $ after two transformations , which is
+\begin { align* }
+& \quad\sum _{j \le n} \binom jk (-1)^{jk} \binom mj \\
+&= \sum _{j \le n} \binom mj [x^k](x-1)^j \\
+&= [x^k] \sum _{j \le n} \binom mj (x-1)^j
+\end { align* }
+
+Suppose $ G(x) = \sum _{j \le n} \binom mjx^j $ , it is not difficult to verify that $ G(x) $ satisfies the differential equation $ mG(x)=( 1 +x)G'(x ) + m \binom {m-1}nx^n $ , thus contributing $ F(x)=G(x- 1 ) $ , there is
+\begin { align* }
+mF(x)&=xF'(x)+m \binom {m-1}n(x-1)^n \\
+[x^k] mF(x)-xF'(x)&=[x^k]m \binom {m-1}n(x-1)^n \\
+(mk) [x^k] F(x)&= (-1)^{nk} m \binom {m-1}n \binom nk \\
+[x^k] F(x)&= (-1)^{nk} \frac {m}{mk} \binom {m-1}{mn-1} \binom nk \\
+&= (-1)^{nk} \binom mk \binom {mk-1}{mn-1}
+\end { align* }
+
+It is worth mentioning that the Lagrange interpolation formula can also derive this result. This method can be convolved only once, but the number of combinations contained in the process $ P $ prime factor of the number may be larger. In the fast evaluation algorithm such as integral recursion, since $ m=O(n) $ , the available value range is in the range of $ O(n^ 3 M^ 2 ) $, which is more suitable.
+
+% \section{Dirichlet generating function}
+
+% \begin{definition}
+% Let $I = \mathbb Z \cap [0, n]$, for $i,j\in \IZ$, let
+% $$
+% i\circ j = \begin{cases}
+% ij & ij \le n\\
+% 0 & \mathrm{else}
+% \end{cases}
+% $$
+
+% The generating function defined on $(I,\circ)$ is the Dirichlet generating function (DGF) that we take when calculating.
+
+% In addition, unlike other generating function notation, Dirichlet generating function is often written as $F(s) = \sum_n \frac{a_n}{n^s}$. The sequence convolution is often called Dirichlet convolution.
+% \end{definition}
+
+% \subsection{Convolution}
+
+% \begin{theorem}
+% Dirichlet convolution can be performed \emph{online} within $\Theta(n\log n)$ time.
+% \end{theorem}
+
+% Since the number of $(i,j)$ in $ij\le n$ is only $\Theta(n\log n)$, it is only necessary to preprocess all $i$ corresponding to each $k$. This fact is well known, so I won’t repeat it here.
+
+\section { Summary }
+
+In this article, we briefly outline the main branches of the problem in the calculation of the generating function, the different levels of difficulty in the calculation, and part of the program to solve the corresponding problem. However, my life is boundless, and knowledge is boundless. The theory of this article still has countless vacancies and open problems to be solved. Readers don't need to stick to some of the insights of this article. If you are a fan of the authorities, the bystanders are clear. Perhaps if you jump out of the insights of this article, you can get further results on some of the issues. In short, I hope that interested students can use the spirit of Yugong Yishan to further improve the theoretical picture of generating function calculation!
+
+\section* { thanks }
+
+Thanks to the Chinese Computer Society for providing a platform for learning and communication.
+
+Thank you Xiao Ran from the High School Affiliated to Peking University for your concern and guidance.
+
+Thank you family and friends for their support and encouragement.
+
+Thank you Zhao Yuyang for discussing with me and giving inspiration, as well as his forward-looking understanding of related parts such as ensemble power series.
+
+Thank you Dai Jiangqi for discussing with me and giving me inspiration.
+
+\ifcont
+Thank you \textbf { look{ \color {red}you who came here} }.
+\fi
+
+\begin { thebibliography }{99}
+\ifcont
+\addcontentsline {toc}{section}{References}
+\fi
+\bibitem {polyfact} Kedlaya, Kiran \& Umans, Christopher. (2008). Fast Polynomial Factorization and Modular Composition. SIAM Journal on Computing. 40. \DOI {10.1137/08073408X}
+\bibitem {tellegen} Chen Yu, Zhao Yuyang, Zeng Zhiyuan. (2020). A brief introduction to the transposition principle. IOI2020 China National Training Team Proceedings.
+\bibitem {newton} Zhao Yuyang. ( $ 2018 \sim  2020 $ ). Regarding the constants of Newton's method for the calculation of the optimized form of the power series. \url {https://negiizhao.blog.uoj.ac/blog/4671}
+\bibitem {relaxmul} Hoeven, Joris. (2007). New algorithms for relaxed multiplication. \DOI {10.1016/j.jsc.2007.04.004}
+\bibitem {nimberpoly} Luo Yuxiang. (2020). Talking about Nimber and polynomial algorithms. IOI2020 China National Training Team Proceedings.
+\bibitem {acomb} Philippe Flajolet \& Robert Sedgewick. (2007). Analytic Combinatorics.
+\bibitem {fastlinearrec} Bostan, A. \& Mori, Ryuhei. (2020). A Simple and Fast Algorithm for Computing the $ N $ -th Term of a Linearly Recurrent Sequence. \DOI {10.1137/1.9781611976496.14}
+\bibitem {zzq} Zhong Ziqian. (2019). The properties and applications of two types of recursive sequence. IOI2019 China National Candidate Team Proceedings.
+% \bibitem{palg} Bostan, Alin and Christol, Gilles and Dumas, Philippe. (2016). Fast Computation of the $N$-th Term of an Algebraic Series over a Finite Prime Field. \DOI{10.1145/2930889.2930904}
+\bibitem {combenum} Goulden, Ian P., and David M. Jackson. (2004). Combinatorial Enumeration.
+\bibitem {walk} Hong Huadun. (2018). "WC2018" State and District Division" problem solving report.
+\bibitem {vfk} Lu Kaifeng. (2015). The properties and applications of ensemble power series and their fast algorithms. IOI2015 China National Candidate Team Proceedings.
+\bibitem {graph} Bollob \' as, B \' ela. (1998). Modern Graph Theory
+\bibitem {b2c} Zhao Yuyang. (2019). Solution to the "Counting of Subgraphs Generated by Double Connected Points". Written by Yaohua Ma: \url {https://loj.ac/d/2668}
+\end { thebibliography }
